@@ -1,10 +1,11 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { User } from './schemas/user.schema';
 import { Model } from 'mongoose';
 import { hashPasswordHelper } from '@/helpers/util';
+import aqp from 'api-query-params';
 
 @Injectable()
 export class UsersService {
@@ -13,25 +14,61 @@ export class UsersService {
     private userModel: Model<User>
   ) {}
 
+  isEmailExist = async (email: string) => {
+    const user = await this.userModel.exists({ email });
+    return user ? true : false;
+  }
+
   async create(createUserDto: CreateUserDto) {
+    // Check if email already exists
+    const isExist = await this.isEmailExist(createUserDto.email);
+    if (isExist) {
+      throw new BadRequestException(`Email ${createUserDto.email} already exists`);
+    }
+
     // Hash the password before saving the user
     const hashPassword = await hashPasswordHelper(createUserDto.password);
-    return 'This action adds a new user';
+    const user = await this.userModel.create({
+      ...createUserDto,
+      password: hashPassword,
+    });
+    return {
+      _id: user._id,
+    };
   }
 
-  findAll() {
-    return `This action returns all users`;
+  async findAll(query: string, current: number, pageSize: number) {
+    const { filter, limit, sort} = aqp(query);
+    if (filter.current) delete filter.current;
+    if (filter.pageSize) delete filter.pageSize;
+
+    if (!current) current = 1;
+    if (!pageSize) pageSize = 10;
+
+    const totalItems = (await this.userModel.find(filter)).length;
+    const totalPages = Math.ceil(totalItems / pageSize);
+
+    const skip = (current - 1) * pageSize;
+
+    const results = await this.userModel
+    .find(filter)
+    .limit(limit)
+    .skip(skip)
+    .select("-password")
+    .sort(sort as any);
+
+    return {results, totalPages};
   }
 
-  findOne(id: number) {
+  async findOne(id: number) {
     return `This action returns a #${id} user`;
   }
 
-  update(id: number, updateUserDto: UpdateUserDto) {
+  async update(id: number, updateUserDto: UpdateUserDto) {
     return `This action updates a #${id} user`;
   }
 
-  remove(id: number) {
+  async remove(id: number) {
     return `This action removes a #${id} user`;
   }
 }
