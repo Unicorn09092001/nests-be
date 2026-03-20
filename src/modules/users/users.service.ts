@@ -6,6 +6,7 @@ import { User } from './schemas/user.schema';
 import { Model } from 'mongoose';
 import { hashPasswordHelper } from '@/helpers/util';
 import aqp from 'api-query-params';
+import mongoose from 'mongoose';
 
 @Injectable()
 export class UsersService {
@@ -60,15 +61,32 @@ export class UsersService {
     return {results, totalPages};
   }
 
-  async findOne(id: number) {
-    return `This action returns a #${id} user`;
+  async findOne(id: string) {
+    return this.userModel.findById(id);
   }
 
-  async update(id: number, updateUserDto: UpdateUserDto) {
-    return `This action updates a #${id} user`;
+  async findOneByEmail(email: string) {
+    return this.userModel.findOne({email: email});
   }
 
-  async remove(id: number) {
-    return `This action removes a #${id} user`;
+  async update(updateUserDto: UpdateUserDto) {
+    return await this.userModel.updateOne(
+      {_id: updateUserDto._id},
+      {
+        name: updateUserDto.name,
+        phone: updateUserDto.phone,
+        address: updateUserDto.address,
+        image: updateUserDto.image
+      }
+    )
+  }
+
+  async remove(id: string) {
+    //check id 
+    if (mongoose.isValidObjectId(id)) {
+      return await this.userModel.deleteOne({_id: id})
+    } else {
+      throw new BadRequestException("_ID khoong dung dinh dang")
+    }
   }
 }
