@@ -3,6 +3,7 @@ import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { Public } from '@/decorator/customize';
+import { DeleteResult } from 'mongodb';
 
 @Controller('users')
 export class UsersController {
@@ -38,7 +39,7 @@ export class UsersController {
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
+  remove(@Param('id') id: string): Promise<DeleteResult> {
     return this.usersService.remove(id);
   }
 }

@@ -40,6 +40,7 @@
     "class-validator": "0.14.1",
     "dayjs": "1.11.12",
     "handlebars": "4.7.8",
+    "mongodb": "^7.1.0",
     "mongoose": "8.5.1",
     "nodemailer": "6.9.1",
     "passport": "0.7.0",
@@ -91,5 +92,6 @@
     ],
     "coverageDirectory": "../coverage",
     "testEnvironment": "node"
-  }
+  },
+  "packageManager": "pnpm@10.32.1+sha512.a706938f0e89ac1456b6563eab4edf1d1faf3368d1191fc5c59790e96dc918e4456ab2e67d613de1043d2e8c81f87303e6b40d4ffeca9df15ef1ad567348f2be"
 }
