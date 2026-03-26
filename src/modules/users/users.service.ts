@@ -11,6 +11,7 @@ import { CreateAuthDto } from '@/auth/dto/create-auth.dto';
 import { v4 as uuidv4 } from 'uuid';
 import dayjs from 'dayjs';
 import { MailerService } from '@nestjs-modules/mailer';
+import { ActiveUserDto } from './dto/active-user.dto';
 
 @Injectable()
 export class UsersService {
@@ -94,6 +95,59 @@ export class UsersService {
     } else {
       throw new BadRequestException("_ID khoong dung dinh dang")
     }
+  }
+
+  async active(activeUserDto: ActiveUserDto) {
+    const user = await this.userModel.findById(activeUserDto.userId)
+
+    if (!user) {
+      throw new BadRequestException("User khong ton taij")
+    }
+
+    if (user.codeId !== activeUserDto.verifyCode) {
+      throw new BadRequestException("Code verify khong hop le")
+    }
+
+    if (user.isActive) {
+      throw new BadRequestException("Tai khoan da duoc kich hoat")
+    }
+
+    return await this.userModel.updateOne(
+      {_id: activeUserDto.userId},
+      {
+        isActive: true,
+      }
+    )
+  }
+
+  async handleResendVerifyCode(userId: string) {
+    const user = await this.userModel.findById(userId);
+
+    if (!user) {
+      throw new BadRequestException("User khong ton taij")
+    }
+
+    const codeId = uuidv4();
+    await this.userModel.updateOne(
+      {_id: userId},
+      {
+        isActive: false,
+        codeId: codeId,
+        codeExpired: dayjs().add(5, "minutes"),
+      }
+    )
+
+    this.mailerService.sendMail({
+      to: user.email,
+      subject: "Activate your account at @hoidanit",
+      template: "register",
+      context: {
+        name: user.name ?? user.email,
+        activationCode: codeId
+      }
+    })
+
+    return "Resend verify code success"
   }
 
   async handleRegister(registerDto: CreateAuthDto) {

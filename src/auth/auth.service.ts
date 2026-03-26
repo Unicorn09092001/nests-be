@@ -9,7 +9,7 @@ import { CreateAuthDto } from './dto/create-auth.dto';
 export class AuthService {
   constructor(
     private usersService: UsersService,
-    private jwtService: JwtService
+    private jwtService: JwtService,
   ) {}
 
   async validateUser(username: string, pass: string): Promise<any> {
@@ -24,10 +24,19 @@ export class AuthService {
     const payload = { username: user.email, sub: user._id };
     return {
       access_token: this.jwtService.sign(payload),
+      user: {
+        email: user.email,
+        _id: user._id,
+        name: user.name
+      }
     };
   }
 
   async handleRegister(registerDto: CreateAuthDto) {
     return await this.usersService.handleRegister(registerDto);
+  }
+
+  async handleResendVerifyCode(userId: string) {
+    return await this.usersService.handleResendVerifyCode(userId);
   }
 }

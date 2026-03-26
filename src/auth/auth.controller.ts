@@ -27,20 +27,8 @@ export class AuthController {
   }
 
   @Public()
-  @Get('mail')
-  testMail() {
-    this.mailerService.sendMail({
-      to: "rongdat2009@gmail.com",
-      // from: "noreply@nestjs.com",
-      subject: "Testing Nest MailerModule",
-      text: "welcome",
-      template: "register",
-      context: {
-        name: "Erik",
-        activationCode: 123456789
-      }
-    })
-
-    return "Test mail";
+  @Get('resend-verify-code/:id')
+  resendVerifyCode(@Param("id") userId: string) {
+    return this.authService.handleResendVerifyCode(userId);
   }
 }

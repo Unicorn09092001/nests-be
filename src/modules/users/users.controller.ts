@@ -4,6 +4,7 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { Public } from '@/decorator/customize';
 import { DeleteResult } from 'mongodb';
+import { ActiveUserDto } from './dto/active-user.dto';
 
 @Controller('users')
 export class UsersController {
@@ -15,6 +16,7 @@ export class UsersController {
   }
 
   @Get()
+  @Public()
   findAll(
     @Query() query: string,
     @Query('current') current: number,
@@ -41,5 +43,11 @@ export class UsersController {
   @Delete(':id')
   remove(@Param('id') id: string): Promise<DeleteResult> {
     return this.usersService.remove(id);
+  }
+
+  @Patch("active")
+  @Public()
+  active(@Body() activeUserDto: ActiveUserDto) {
+    return this.usersService.active(activeUserDto);
   }
 }
