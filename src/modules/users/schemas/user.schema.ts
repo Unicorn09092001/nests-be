@@ -38,6 +38,8 @@ export class User {
     @Prop()
     codeExpired: Date;
 
+    @Prop()
+    refreshToken?: string;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

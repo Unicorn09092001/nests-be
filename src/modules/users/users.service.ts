@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { InjectModel } from '@nestjs/mongoose';
@@ -68,12 +68,25 @@ export class UsersService {
     return {results, totalPages};
   }
 
-  async findOne(id: string) {
-    return this.userModel.findById(id);
+  async getUserById(id: string) {
+    try {
+      const user = (await this.userModel.findById(id))?.toObject();
+      if (!user) {
+        throw new NotFoundException("User not found");
+      }
+      return user;
+    } catch (error) {
+      throw new BadRequestException(error)
+    }
   }
 
   async findOneByEmail(email: string) {
-    return this.userModel.findOne({email: email});
+    const user = (await this.userModel.findOne({email: email}))?.toObject();
+    if (!user) {
+      throw new NotFoundException("User not found");
+    }
+    
+    return user;
   }
 
   async update(updateUserDto: UpdateUserDto) {
@@ -83,7 +96,8 @@ export class UsersService {
         name: updateUserDto.name,
         phone: updateUserDto.phone,
         address: updateUserDto.address,
-        image: updateUserDto.image
+        image: updateUserDto.image,
+        refreshToken: updateUserDto.refreshToken
       }
     )
   }
@@ -169,15 +183,19 @@ export class UsersService {
     });
 
     //send email
-    this.mailerService.sendMail({
-      to: user.email,
-      subject: "Activate your account at @hoidanit",
-      template: "register",
-      context: {
-        name: user.name ?? user.email,
-        activationCode: codeId
-      }
-    })
+    try {
+      this.mailerService.sendMail({
+        to: user.email,
+        subject: "Activate your account at @hoidanit",
+        template: "register",
+        context: {
+          name: user.name ?? user.email,
+          activationCode: codeId
+        }
+      })
+    } catch (error) {
+      console.log(error)
+    }
     
     //Tra ra phan hoi
     return {
