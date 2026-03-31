@@ -36,10 +36,8 @@ export class AuthController {
   @Public()
   @Post('refresh')
   @UseGuards(JwtRefreshAuthGuard)
-  refresh(@Request() req, @Res({ passthrough: true }) response: express.Response) {
-    console.log('refresh token', req.user)
-
-    return this.authService.login(req.user, response);
+  refresh(@Request() req) {
+    return this.authService.refreshToken(req.user._id, req.user.refreshToken);
   }
 
   @Post('signout')

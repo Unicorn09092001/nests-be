@@ -1,7 +1,7 @@
 
 import { comparePassword, hashPasswordHelper } from '@/helpers/util';
 import { UsersService } from '@/modules/users/users.service';
-import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { CreateAuthDto } from './dto/create-auth.dto';
 import { ConfigService } from '@nestjs/config';
@@ -20,7 +20,14 @@ export class AuthService {
   async validateUser(email: string, pass: string): Promise<any> {
     try {
       const user = await this.usersService.findOneByEmail(email);
-      if(!user) return null;
+
+      if (!user) {
+        throw new UnauthorizedException();
+      }
+
+      if(user.isActive === false) {
+        throw new BadRequestException("Tài khoản chua được kích hoạt.")
+      }
 
       const authenticated = await comparePassword(pass, user.password);
       if(!authenticated) return null;
@@ -31,7 +38,7 @@ export class AuthService {
     }
   }
 
-  async verifyUserRefreshToken(refreshToken: string, userId: string) {
+  async verifyUserRefreshToken(refreshToken: string, userId: string): Promise<any> {
     try {
       const user = await this.usersService.getUserById(userId);
       if (!user) return null;
@@ -48,6 +55,35 @@ export class AuthService {
     }
   } 
 
+  async generateTokens(userId: string, email: string) {
+    const payload = { username: email, userId: userId};
+
+    const accessToken = this.jwtService.sign(payload, {
+      secret: this.configService.get('JWT_ACCESS_SECRET'),
+      expiresIn: this.configService.get<number>('JWT_ACCESS_TOKEN_EXPIRED'),
+    });
+
+    const refreshToken = this.jwtService.sign(payload, {
+      secret: this.configService.get('JWT_REFRESH_SECRET'),
+      expiresIn: this.configService.get<number>('JWT_REFRESH_TOKEN_EXPIRATION_MS')
+    });
+
+    return { accessToken, refreshToken };
+  }
+
+  async saveRefreshToken(userId: string, refreshToken: string) {
+    const hashRefreshToken = await hashPasswordHelper(refreshToken) || ""
+
+    await this.usersService.update({
+      _id: userId,
+      name: '',
+      phone: '',
+      address: '',
+      image: '',
+      refreshToken: hashRefreshToken
+    })
+  }
+
   async login(user: {email: string, _id: string, name: string}, response: Response) {
     const expiresAccessToken = new Date();
     expiresAccessToken.setMilliseconds(expiresAccessToken.getTime() + parseInt(this.configService.getOrThrow<string>('JWT_ACCESS_TOKEN_EXPIRED')))
@@ -55,39 +91,22 @@ export class AuthService {
     const expiresRefreshToken = new Date();
     expiresRefreshToken.setMilliseconds(expiresRefreshToken.getTime() + parseInt(this.configService.getOrThrow<string>('JWT_REFRESH_TOKEN_EXPIRATION_MS')))
 
-    const payload = { username: user.email, userId: user._id };
-
-    const accessToken = this.jwtService.sign(payload, {
-      secret: this.configService.getOrThrow<string>('JWT_SECRET_KEY'),
-      expiresIn: this.configService.get<number>('JWT_ACCESS_TOKEN_EXPIRED')
-    })
-
-    const refreshToken = this.jwtService.sign(payload, {
-      secret: this.configService.getOrThrow<string>('JWT_REFRESH_TOKEN_SECRET_KEY'),
-      expiresIn: this.configService.get<number>('JWT_REFRESH_TOKEN_EXPIRATION_MS')
-    })
-
-    const hashRefreshToken = await hashPasswordHelper(refreshToken) || ""
-
-    await this.usersService.update({
-      _id: user._id,
-      name: '',
-      phone: '',
-      address: '',
-      image: '',
-      refreshToken: hashRefreshToken
-    })
+    const {accessToken, refreshToken} = await this.generateTokens(user._id, user.email);
+    
+    await this.saveRefreshToken(user._id, refreshToken);
 
     response.cookie('Authentication', accessToken, {
       httpOnly: true,
       secure: this.configService.get('NODE_ENV') === 'production',
       expires: expiresAccessToken,
+      sameSite: 'none',
     });
 
-    response.cookie('Refresh', refreshToken, {
+    response.cookie('refresh_token', refreshToken, {
       httpOnly: true,
       secure: this.configService.get('NODE_ENV') === 'production',
       expires: expiresRefreshToken,
+      sameSite: 'none',
     });
 
     return {
@@ -130,24 +149,25 @@ export class AuthService {
     }
   }
 
-  // async refreshToken(user: any) {
-  //   const userId = user._id.toHexString ? user._id.toHexString() : user._id;
-  //   const payload = { username: user.email, userId: userId };
+  async refreshToken(userId: string, refreshToken: string) {
+    const user = await this.verifyUserRefreshToken(refreshToken, userId);
+    if (!user) {
+      throw new UnauthorizedException('Invalid refresh token');
+    }
 
-  //   const accessToken = this.jwtService.sign(payload, {
-  //     secret: this.configService.getOrThrow<string>('JWT_SECRET_KEY'),
-  //     expiresIn: this.configService.get<number>('JWT_ACCESS_TOKEN_EXPIRED')
-  //   })
+    const tokens = await this.generateTokens(userId, user.email);
+    await this.saveRefreshToken(userId, tokens.refreshToken);
 
-  //   return {
-  //     access_token: accessToken,
-  //     user: {
-  //       email: user.email,
-  //       _id: user._id,
-  //       name: user.name
-  //     }
-  //   };
-  // }
+    return {
+      access_token: tokens.accessToken,
+      refresh_token: tokens.refreshToken,
+      user: {
+        email: user.email,
+        _id: user._id,
+        name: user.name
+      }
+    };
+  }
 
   async handleRegister(registerDto: CreateAuthDto) {
     return await this.usersService.handleRegister(registerDto);

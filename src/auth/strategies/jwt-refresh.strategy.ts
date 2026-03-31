@@ -16,17 +16,19 @@ export class JwtRefreshStrategy extends PassportStrategy(
   ) {
     super({
       jwtFromRequest: ExtractJwt.fromExtractors([
-        (request: Request) => request.cookies?.Refresh,
+        (request: Request) => request.cookies?.refresh_token,
       ]),
-      // ignoreExpiration: false,
-      secretOrKey: configService.get<string>('JWT_REFRESH_TOKEN_SECRET_KEY') ?? '',
+      secretOrKey: configService.get<string>('JWT_SECRET_KEY') ?? '',
       passReqToCallback: true,
+      ignoreExpiration: false,
     });
   }
 
-  async validate(request: Request, payload: {userId: string}) {
-    console.log('payload', payload)
-
-    return this.authService.verifyUserRefreshToken(request.cookies?.Refresh, payload.userId);
+  async validate(request: Request, payload: {userId: string, username: string}) {
+    return {
+      _id: payload.userId, 
+      username: payload.username,
+      refreshToken: request.cookies?.refresh_token,
+    };
   }
 }
