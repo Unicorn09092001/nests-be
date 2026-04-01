@@ -1,9 +1,10 @@
 import { IsMongoId, IsNotEmpty, IsOptional } from 'class-validator';
+import { Dayjs } from 'dayjs';
 
 export class UpdateUserDto {
     @IsMongoId({message: "ID khong hop le"})
-    @IsNotEmpty({message: "_id khong duoc de trong"})
-    _id: string;
+    @IsNotEmpty({message: "ID khong duoc de trong"})
+    id: string;
 
     @IsOptional()
     name: string;
@@ -15,7 +16,10 @@ export class UpdateUserDto {
     address: string;
 
     @IsOptional()
-    image: string;
+    avatar: string;
+
+    @IsOptional()
+    isEmailVerified: boolean;
 
     @IsOptional()
     refreshToken: string;

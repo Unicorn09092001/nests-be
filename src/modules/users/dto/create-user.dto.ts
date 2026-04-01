@@ -1,4 +1,5 @@
 import { IsEmail, IsNotEmpty, IsOptional } from "class-validator";
+import { Dayjs } from "dayjs";
 
 export class CreateUserDto {
     @IsNotEmpty({message: "Ten nguoi dung khong duoc de trong"})
@@ -18,5 +19,11 @@ export class CreateUserDto {
     address: string;
 
     @IsOptional()
-    image: string;
+    avatar: string;
+
+    @IsOptional()
+    codeId: string;
+
+    @IsOptional()
+    codeExpired: string;
 }

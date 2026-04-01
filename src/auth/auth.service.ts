@@ -25,7 +25,7 @@ export class AuthService {
         throw new UnauthorizedException();
       }
 
-      if(user.isActive === false) {
+      if(!user.isEmailVerified) {
         throw new BadRequestException("Tài khoản chua được kích hoạt.")
       }
 
@@ -75,25 +75,21 @@ export class AuthService {
     const hashRefreshToken = await hashPasswordHelper(refreshToken) || ""
 
     await this.usersService.update({
-      _id: userId,
-      name: '',
-      phone: '',
-      address: '',
-      image: '',
+      id: userId,
       refreshToken: hashRefreshToken
     })
   }
 
-  async login(user: {email: string, _id: string, name: string}, response: Response) {
+  async login(user: {email: string, id: string | number, name: string}, response: Response) {
     const expiresAccessToken = new Date();
     expiresAccessToken.setMilliseconds(expiresAccessToken.getTime() + parseInt(this.configService.getOrThrow<string>('JWT_ACCESS_TOKEN_EXPIRED')))
 
     const expiresRefreshToken = new Date();
     expiresRefreshToken.setMilliseconds(expiresRefreshToken.getTime() + parseInt(this.configService.getOrThrow<string>('JWT_REFRESH_TOKEN_EXPIRATION_MS')))
 
-    const {accessToken, refreshToken} = await this.generateTokens(user._id, user.email);
+    const {accessToken, refreshToken} = await this.generateTokens(String(user.id), user.email);
     
-    await this.saveRefreshToken(user._id, refreshToken);
+    await this.saveRefreshToken(String(user.id), refreshToken);
 
     response.cookie('Authentication', accessToken, {
       httpOnly: true,
@@ -102,7 +98,7 @@ export class AuthService {
       sameSite: 'none',
     });
 
-    response.cookie('refresh_token', refreshToken, {
+    response.cookie('refreshToken', refreshToken, {
       httpOnly: true,
       secure: this.configService.get('NODE_ENV') === 'production',
       expires: expiresRefreshToken,
@@ -110,11 +106,11 @@ export class AuthService {
     });
 
     return {
-      access_token: accessToken,
-      refresh_token: refreshToken,
+      accessToken: accessToken,
+      refreshToken: refreshToken,
       user: {
         email: user.email,
-        _id: user._id,
+        id: user.id,
         name: user.name
       }
     };
@@ -128,11 +124,7 @@ export class AuthService {
       }
 
       await this.usersService.update({
-        _id: userId,
-        name: user.name,
-        phone: user.phone,
-        address: user.address,
-        image: '',
+        id: userId,
         refreshToken: ''
       })
 
@@ -159,11 +151,11 @@ export class AuthService {
     await this.saveRefreshToken(userId, tokens.refreshToken);
 
     return {
-      access_token: tokens.accessToken,
-      refresh_token: tokens.refreshToken,
+      accessToken: tokens.accessToken,
+      refreshToken: tokens.refreshToken,
       user: {
         email: user.email,
-        _id: user._id,
+        id: user._id,
         name: user.name
       }
     };

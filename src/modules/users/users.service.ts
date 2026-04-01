@@ -1,29 +1,25 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { InjectModel } from '@nestjs/mongoose';
-import { User } from './schemas/user.schema';
-import { Model } from 'mongoose';
 import { hashPasswordHelper } from '@/helpers/util';
 import aqp from 'api-query-params';
 import mongoose from 'mongoose';
 import { CreateAuthDto } from '@/auth/dto/create-auth.dto';
 import { v4 as uuidv4 } from 'uuid';
-import dayjs from 'dayjs';
+import dayjs, { Dayjs } from 'dayjs';
 import { MailerService } from '@nestjs-modules/mailer';
 import { ActiveUserDto } from './dto/active-user.dto';
+import { UserRepository } from './users.repository';
 
 @Injectable()
 export class UsersService {
   constructor(
-    @InjectModel(User.name) 
-    private userModel: Model<User>,
-
+    private readonly userRepo: UserRepository,
     private readonly mailerService: MailerService
   ) {}
 
   isEmailExist = async (email: string) => {
-    const user = await this.userModel.exists({ email });
+    const user = await this.userRepo.findByEmail(email);
     return user ? true : false;
   }
 
@@ -35,53 +31,46 @@ export class UsersService {
     }
 
     // Hash the password before saving the user
-    const hashPassword = await hashPasswordHelper(createUserDto.password);
-    const user = await this.userModel.create({
+    const hashPassword = await hashPasswordHelper(createUserDto.password) as string;
+    const user = await this.userRepo.create({
       ...createUserDto,
       password: hashPassword,
-    });
+    })
+
     return {
-      _id: user._id,
+      _id: user.id,
     };
   }
 
   async findAll(query: string, current: number, pageSize: number) {
-    const { filter, limit, sort} = aqp(query);
+    const { filter } = aqp(query);
     if (filter.current) delete filter.current;
     if (filter.pageSize) delete filter.pageSize;
 
     if (!current) current = 1;
     if (!pageSize) pageSize = 10;
 
-    const totalItems = (await this.userModel.find(filter)).length;
-    const totalPages = Math.ceil(totalItems / pageSize);
+    const results = await this.userRepo.findAll({
+      email: filter.email,
+      refreshToken: filter.refreshToken,
+      id: filter.id,
+      page: current,
+      pageSize: pageSize
+    })
 
-    const skip = (current - 1) * pageSize;
-
-    const results = await this.userModel
-    .find(filter)
-    .limit(limit)
-    .skip(skip)
-    .select("-password")
-    .sort(sort as any);
-
-    return {results, totalPages};
+    return results;
   }
 
   async getUserById(id: string) {
-    try {
-      const user = (await this.userModel.findById(id))?.toObject();
+      const user = await this.userRepo.findById(id);
       if (!user) {
         throw new NotFoundException("User not found");
       }
       return user;
-    } catch (error) {
-      throw new BadRequestException(error)
-    }
   }
 
   async findOneByEmail(email: string) {
-    const user = (await this.userModel.findOne({email: email}))?.toObject();
+    const user = await this.userRepo.findByEmail(email);
     if (!user) {
       throw new NotFoundException("User not found");
     }
@@ -89,30 +78,21 @@ export class UsersService {
     return user;
   }
 
-  async update(updateUserDto: UpdateUserDto) {
-    return await this.userModel.updateOne(
-      {_id: updateUserDto._id},
-      {
-        name: updateUserDto.name,
-        phone: updateUserDto.phone,
-        address: updateUserDto.address,
-        image: updateUserDto.image,
-        refreshToken: updateUserDto.refreshToken
-      }
-    )
+  async update(updateUserDto: Partial<Omit<UpdateUserDto, 'id'>> & Pick<UpdateUserDto, 'id'>) {
+    return await this.userRepo.update(updateUserDto);
   }
 
   async remove(id: string) {
     //check id 
     if (mongoose.isValidObjectId(id)) {
-      return await this.userModel.deleteOne({_id: id})
+      return await this.userRepo.remove(id);
     } else {
       throw new BadRequestException("_ID khoong dung dinh dang")
     }
   }
 
   async active(activeUserDto: ActiveUserDto) {
-    const user = await this.userModel.findById(activeUserDto.userId)
+    const user = await this.userRepo.findById(activeUserDto.userId)
 
     if (!user) {
       throw new BadRequestException("User khong ton taij")
@@ -122,33 +102,29 @@ export class UsersService {
       throw new BadRequestException("Code verify khong hop le")
     }
 
-    if (user.isActive) {
+    if (user.isEmailVerified) {
       throw new BadRequestException("Tai khoan da duoc kich hoat")
     }
 
-    return await this.userModel.updateOne(
-      {_id: activeUserDto.userId},
-      {
-        isActive: true,
-      }
-    )
+    return await this.userRepo.update({
+      id: activeUserDto.userId,
+      isEmailVerified: true,
+    })
   }
 
   async handleResendVerifyCode(userId: string) {
-    const user = await this.userModel.findById(userId);
+    const user = await this.userRepo.findById(userId);
 
     if (!user) {
       throw new BadRequestException("User khong ton taij")
     }
 
     const codeId = uuidv4();
-    await this.userModel.updateOne(
-      {_id: userId},
+    await this.userRepo.update(
       {
-        isActive: false,
-        codeId: codeId,
-        codeExpired: dayjs().add(5, "minutes"),
-      }
+        id: userId,
+        isEmailVerified: false,
+      },
     )
 
     this.mailerService.sendMail({
@@ -172,14 +148,17 @@ export class UsersService {
     }
 
     // Hash the password before saving the user
-    const hashPassword = await hashPasswordHelper(registerDto.password);
+    const hashPassword = await hashPasswordHelper(registerDto.password) ?? "";
     const codeId = uuidv4();
-    const user = await this.userModel.create({
-      ...registerDto,
+    const user = await this.userRepo.create({
+      email: registerDto.email,
+      name: registerDto.name ?? "",
       password: hashPassword,
-      isActive: false,
+      phone: '',
+      address: '',
+      avatar: '',
       codeId: codeId,
-      codeExpired: dayjs().add(5, "minutes"),
+      codeExpired: dayjs().add(5, 'minutes').toISOString()
     });
 
     //send email
@@ -199,7 +178,7 @@ export class UsersService {
     
     //Tra ra phan hoi
     return {
-      _id: user._id,
+      id: user.id,
     };
   }
 }

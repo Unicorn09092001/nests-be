@@ -8,5 +8,5 @@ export class CreateAuthDto {
     password: string;
 
     @IsOptional()
-    name: string
+    name: string;
 }
