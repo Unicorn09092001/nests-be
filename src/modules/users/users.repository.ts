@@ -29,7 +29,7 @@ export class UserRepository {
         // refreshToken: filterData.refreshToken,
       },
       skip: (filterData.page - 1) * filterData.pageSize,
-      take: filterData.pageSize,
+      take: Number(filterData.pageSize),
       orderBy: {
         createdAt: 'desc',
       },

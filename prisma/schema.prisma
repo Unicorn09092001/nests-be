@@ -14,20 +14,20 @@ datasource db {
 }
 
 model User {
-  id              Int      @id @default(autoincrement())
-  email           String   @unique
+  id              Int       @id @default(autoincrement())
+  email           String    @unique
   name            String
   phone           String
   password        String
   refreshToken    String?
-  isEmailVerified Boolean  @default(false)
+  isEmailVerified Boolean   @default(false)
   avatar          String?
   address         String?
-  roles           Role[]   @relation("UserRoles")
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  codeId          String
-  codeExpired     DateTime
+  roles           Role[]    @relation("UserRoles")
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  codeId          String?
+  codeExpired     DateTime?
 }
 
 model Role {

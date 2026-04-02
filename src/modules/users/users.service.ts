@@ -38,7 +38,12 @@ export class UsersService {
     })
 
     return {
-      _id: user.id,
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      phone: user.phone,
+      address: user.address,
+      avatar: user.avatar,
     };
   }
 
@@ -79,16 +84,23 @@ export class UsersService {
   }
 
   async update(updateUserDto: Partial<Omit<UpdateUserDto, 'id'>> & Pick<UpdateUserDto, 'id'>) {
+    const user = await this.userRepo.findById(updateUserDto.id as string);
+
+    if (!user) {
+      throw new NotFoundException("User not found");
+    }
+
     return await this.userRepo.update(updateUserDto);
   }
 
   async remove(id: string) {
-    //check id 
-    if (mongoose.isValidObjectId(id)) {
-      return await this.userRepo.remove(id);
-    } else {
-      throw new BadRequestException("_ID khoong dung dinh dang")
+    const user = await this.userRepo.findById(id);
+
+    if (!user) {
+      throw new NotFoundException("User not found");
     }
+    
+    return await this.userRepo.remove(id);
   }
 
   async active(activeUserDto: ActiveUserDto) {
@@ -119,11 +131,21 @@ export class UsersService {
       throw new BadRequestException("User khong ton taij")
     }
 
+    if (user.isEmailVerified) {
+      throw new BadRequestException("Tai khoan da duoc kich hoat")
+    }
+
+    if (user.codeExpired && Date.now() > new Date(user.codeExpired).getTime()) {
+      throw new BadRequestException("Verify code is expired, please request a new one")
+    }
+
     const codeId = uuidv4();
     await this.userRepo.update(
       {
         id: userId,
         isEmailVerified: false,
+        codeId: codeId,
+        codeExpired: dayjs().add(5, 'minutes').toISOString()
       },
     )
 
