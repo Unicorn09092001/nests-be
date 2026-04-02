@@ -11,6 +11,7 @@ import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handleba
 import { TransformInterceptor } from './core/transform.interceptor';
 import { DatabaseModule } from './database/database.module';
 import { PrismaModule } from './infra/prisma/prisma.module';
+import { PermissionsGuard } from './auth/guards/permission.guard';
 
 @Module({
   imports: [
@@ -56,6 +57,10 @@ import { PrismaModule } from './infra/prisma/prisma.module';
     {
       provide: APP_GUARD,
       useClass: JwtAuthGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: PermissionsGuard,
     },
     {
       provide: APP_INTERCEPTOR,

@@ -27,4 +27,7 @@ export class UpdateUserDto {
 
     @IsOptional()
     codeExpired: string;
+
+    @IsOptional()
+    roles: number[]
 }

@@ -5,7 +5,6 @@ import { BadRequestException, Injectable, Logger, UnauthorizedException } from '
 import { JwtService } from '@nestjs/jwt';
 import { CreateAuthDto } from './dto/create-auth.dto';
 import { ConfigService } from '@nestjs/config';
-import { RefreshAuthDto } from './dto/refresh-auth.dto';
 import { Response } from 'express';
 
 @Injectable()
@@ -56,7 +55,9 @@ export class AuthService {
   } 
 
   async generateTokens(userId: string, email: string) {
-    const payload = { username: email, userId: userId};
+    const user = await this.usersService.getUserById(userId);
+
+    const payload = { username: email, userId: userId, roles: user.roles};
 
     const accessToken = this.jwtService.sign(payload, {
       secret: this.configService.get('JWT_ACCESS_SECRET'),

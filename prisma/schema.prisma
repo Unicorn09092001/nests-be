@@ -13,6 +13,19 @@ datasource db {
   provider = "mysql"
 }
 
+model Permission {
+  id    Int    @id @default(autoincrement())
+  name  String @unique
+  roles Role[] @relation("RolePermissions")
+}
+
+model Role {
+  id          Int          @id @default(autoincrement())
+  name        String       @unique
+  users       User[]       @relation("UserRoles")
+  permissions Permission[] @relation("RolePermissions")
+}
+
 model User {
   id              Int       @id @default(autoincrement())
   email           String    @unique
@@ -28,10 +41,4 @@ model User {
   updatedAt       DateTime  @updatedAt
   codeId          String?
   codeExpired     DateTime?
-}
-
-model Role {
-  id    Int    @id @default(autoincrement())
-  name  String @unique
-  users User[] @relation("UserRoles")
 }

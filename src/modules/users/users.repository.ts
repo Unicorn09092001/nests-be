@@ -2,7 +2,6 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '@/infra/prisma/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { FilterUserDto } from './dto/filter-user.dto';
-import e from 'express';
 import { UpdateUserDto } from './dto/update-user.dto';
 
 @Injectable()
@@ -12,12 +11,26 @@ export class UserRepository {
   async findByEmail(email: string) {
     return this.prisma.user.findUnique({
       where: { email },
+      include: {
+        roles: {
+          include: {
+            permissions: true,
+          },
+        },
+      },
     });
   }
 
   async findById(id: string) {
     return this.prisma.user.findUnique({
       where: { id: parseInt(id, 10) },
+      include: {
+        roles: {
+          include: {
+            permissions: true,
+          },
+        },
+      },
     });
   }
 
@@ -48,11 +61,16 @@ export class UserRepository {
     const { id, ...updateData } = data;
     return this.prisma.user.update({
       where: { id: parseInt(id as unknown as string, 10) },
-      data: updateData,
+      data: {
+        ...updateData,
+        roles: {
+          set: updateData.roles?.map((roleId) => ({ id: roleId })) || [],
+        }
+      },
     });
   }
 
-  async remove(id: string) {
+  async remove(id: string) { 
     return this.prisma.user.delete({
       where: { id: parseInt(id, 10) },
     });
