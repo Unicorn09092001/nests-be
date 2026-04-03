@@ -130,7 +130,7 @@ export class AuthService {
       })
 
       response.clearCookie('Authentication');
-      response.clearCookie('Refresh');
+      response.clearCookie('refreshToken');
       response.status(200).json({ message: 'Successfully signed out' });
     } catch (error) {
       this.logger.error('Sign out error:', {
