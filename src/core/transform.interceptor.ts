@@ -12,6 +12,12 @@ export interface Response<T> {
   statusCode: number;
   message?: string;
   data: any;
+  meta?: {
+    total: number;
+    page: number;
+    totalPage: number;
+    pageSize: number;
+  }
 }
 @Injectable()
 export class TransformInterceptor<T> implements NestInterceptor<
@@ -24,13 +30,19 @@ export class TransformInterceptor<T> implements NestInterceptor<
     next: CallHandler,
   ): Observable<Response<T>> {
     return next.handle().pipe(
-      map((data) => ({
-        statusCode: context.switchToHttp().getResponse().statusCode,
-        message:
-          this.reflector.get<string>(RESPONSE_MESSAGE, context.getHandler()) ||
-          '',
-        data: data,
-      })),
-    );
+      map(({data, meta}) => {
+        const responseData: Response<T> = {
+          statusCode: context.switchToHttp().getResponse().statusCode,
+          message: this.reflector.get<string>(RESPONSE_MESSAGE, context.getHandler()) || '',
+          data: data,
+        }
+
+        if (meta) {
+          responseData.meta = meta;
+        }
+
+        return responseData
+      }
+    ));
   }
 }

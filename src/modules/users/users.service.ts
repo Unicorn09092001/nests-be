@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { hashPasswordHelper } from '@/helpers/util';
+import { getPagingMeta, hashPasswordHelper } from '@/helpers/util';
 import aqp from 'api-query-params';
 import mongoose from 'mongoose';
 import { CreateAuthDto } from '@/auth/dto/create-auth.dto';
@@ -55,7 +55,7 @@ export class UsersService {
     if (!current) current = 1;
     if (!pageSize) pageSize = 10;
 
-    const results = await this.userRepo.findAll({
+    const [data, count] = await this.userRepo.findAll({
       email: filter.email,
       refreshToken: filter.refreshToken,
       id: filter.id,
@@ -63,7 +63,10 @@ export class UsersService {
       pageSize: pageSize
     })
 
-    return results;
+    return {
+      data,
+      meta: getPagingMeta(count, current as number, pageSize as number)
+    };
   }
 
   async getUserById(id: string) {

@@ -35,18 +35,26 @@ export class UserRepository {
   }
 
   async findAll(filterData: FilterUserDto) {
-    return this.prisma.user.findMany({
-      where: {
-        id: filterData.id ? parseInt(filterData.id as unknown as string, 10) : undefined,
-        email: filterData.email,
-        // refreshToken: filterData.refreshToken,
-      },
-      skip: (filterData.page - 1) * filterData.pageSize,
-      take: Number(filterData.pageSize),
-      orderBy: {
-        createdAt: 'desc',
-      },
-    });
+    return await Promise.all([
+      this.prisma.user.findMany({
+        where: {
+          id: filterData.id ? parseInt(filterData.id as unknown as string, 10) : undefined,
+          email: filterData.email,
+        },
+        skip: (filterData.page - 1) * filterData.pageSize,
+        take: Number(filterData.pageSize),
+        orderBy: {
+          createdAt: 'desc',
+        },
+      }),
+      this.prisma.user.count({
+        where: {
+          id: filterData.id ? parseInt(filterData.id as unknown as string, 10) : undefined,
+          email: filterData.email,
+        },
+      }),
+    ]) 
+      
   }
 
   async create(data: CreateUserDto) {

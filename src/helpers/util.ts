@@ -17,3 +17,14 @@ export const comparePassword = async (plainPassword: string, hashPassword: strin
         console.error("Error: ", error)
     }
 }
+
+export function getPagingMeta(total: number, page: number, pageSize: number) {
+  const totalPage = Math.ceil(total / pageSize);
+
+  return {
+    total,
+    page: Number(page),
+    pageSize: Number(pageSize),
+    totalPage,
+  };
+}
