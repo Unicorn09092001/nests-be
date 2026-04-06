@@ -64,7 +64,15 @@ export class UsersService {
     })
 
     return {
-      data,
+      data: data?.map(item => ({
+        id: item.id,
+        name: item.name,
+        email: item.email,
+        phone: item.phone,
+        address: item.address,
+        createAt: item.createdAt,
+        updateAt: item.updatedAt,
+      })),
       meta: getPagingMeta(count, current as number, pageSize as number)
     };
   }

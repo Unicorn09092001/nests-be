@@ -1,0 +1,8 @@
+model Message {
+    id        Int      @id @default(autoincrement())
+    content   String   @unique
+    createdAt DateTime @default(now())
+    updateAt  DateTime @updatedAt
+    roomId    String
+    senderId  String
+}

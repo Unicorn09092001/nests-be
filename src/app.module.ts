@@ -12,6 +12,7 @@ import { TransformInterceptor } from './core/transform.interceptor';
 import { DatabaseModule } from './database/database.module';
 import { PrismaModule } from './infra/prisma/prisma.module';
 import { PermissionsGuard } from './auth/guards/permission.guard';
+import { ChatModule } from './modules/chat/chat.module';
 
 @Module({
   imports: [
@@ -50,6 +51,7 @@ import { PermissionsGuard } from './auth/guards/permission.guard';
       inject: [ConfigService],
     }),
     PrismaModule,
+    ChatModule,
   ],
   controllers: [AppController],
   providers: [

@@ -13,6 +13,16 @@ datasource db {
   provider = "mysql"
 }
 
+model Message {
+    id        Int      @id @default(autoincrement())
+    content   String   @unique
+    createdAt DateTime @default(now())
+    updateAt  DateTime @updatedAt
+    roomId    String
+    senderId  String
+}
+
+
 model Permission {
   id    Int    @id @default(autoincrement())
   name  String @unique
