@@ -54,8 +54,8 @@ async function main() {
 
     // Generate 20 users
     const users = [
-      { name: 'John Doe', email: 'john.doe@example.com', phone: '+12345678901', role: 'admin' },
-      { name: 'Jane Smith', email: 'jane.smith@example.com', phone: '+12345678902', role: 'admin' },
+      { name: 'John Doe', email: 'rongdat2001@gmail.com', phone: '+12345678901', role: 'admin' },
+      { name: 'Jane Smith', email: 'abc@gmail.com', phone: '+12345678902', role: 'admin' },
       { name: 'Bob Johnson', email: 'bob.johnson@example.com', phone: '+12345678903', role: 'user' },
       { name: 'Alice Brown', email: 'alice.brown@example.com', phone: '+12345678904', role: 'user' },
       { name: 'Charlie Wilson', email: 'charlie.wilson@example.com', phone: '+12345678905', role: 'user' },
@@ -76,7 +76,7 @@ async function main() {
       { name: 'Rachel Clark', email: 'rachel.clark@example.com', phone: '+12345678920', role: 'user' },
     ];
 
-    const hashedPassword = await hashPasswordHelper('password123');
+    const hashedPassword = await hashPasswordHelper('123456');
     if (!hashedPassword) {
       throw new Error('Failed to hash password');
     }
@@ -104,6 +104,28 @@ async function main() {
     console.log('Successfully created 20 users');
     console.log('Admin users: john.doe@example.com, jane.smith@example.com');
     console.log('All users have password: password123');
+
+    // Seed rooms
+    const rooms = [
+      { id: 1, name: 'General', lastMessage: 'Hello everyone!', createdById: 1 },
+      { id: 2, name: 'Support', lastMessage: 'How can I help?', createdById: 2 },
+      { id: 3, name: 'Development', lastMessage: 'Code review needed', createdById: 3 },
+    ];
+
+    for (const roomData of rooms) {
+      await prisma.room.upsert({
+        where: { id: roomData.id },
+        update: {},
+        create: {
+          id: roomData.id,
+          name: roomData.name,
+          createdById: roomData.createdById,
+        },
+      });
+    }
+
+    console.log('Successfully created 3 rooms');
+    console.log('Rooms: General, Support, Development');
   } finally {
     await prisma.$disconnect();
   }

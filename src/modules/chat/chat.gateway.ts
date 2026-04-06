@@ -12,6 +12,8 @@ import { UseGuards } from '@nestjs/common';
 import { WsJwtGuard } from './guards/ws-jwt.guard';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
+import { Filter } from 'mongodb';
+import { FilterMessageDto } from './dto/filter-message.dto';
 
 @WebSocketGateway({
   cors: {
@@ -61,10 +63,10 @@ export class ChatGateway {
   // 👥 join room
   @UseGuards(WsJwtGuard)
   @SubscribeMessage('join_room')
-  async handleJoin(@ConnectedSocket() client: Socket, @MessageBody() roomId: string) {
-    const messages = await this.chatService.getMessages(roomId)
+  async handleJoin(@ConnectedSocket() client: Socket, @MessageBody() params: FilterMessageDto) {
+    const messages = await this.chatService.getMessages(params);
 
-    client.join(roomId);
+    client.join(`${params.roomId}`);
   }
 
   // 💬 send message
@@ -78,12 +80,31 @@ export class ChatGateway {
 
     // save DB
     const message = await this.chatService.createMessage({
-      senderId: user.userId,
+      senderId: Number(user.userId),
       content: payload.content,
       roomId: payload.roomId,
     });
 
     // emit room
-    this.server.to(payload.roomId).emit('receive-message', message);
+    this.server.to(`${payload.roomId}`).emit('receive_message', message);
+  }
+
+  @UseGuards(WsJwtGuard)
+  @SubscribeMessage('create_room')
+  async handleCreateRoom(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() payload: SendMessageDto,
+  ) {
+    const user = client.data.user;
+
+    // save DB
+    // const message = await this.chatService.createMessage({
+    //   senderId: user.userId,
+    //   content: payload.content,
+    //   roomId: payload.roomId,
+    // });
+
+    // emit room
+    // this.server.to(payload.roomId).emit('receive-message', message);
   }
 }

@@ -13,4 +13,7 @@ model User {
   updatedAt       DateTime  @updatedAt
   codeId          String?
   codeExpired     DateTime?
+  messages        Message[] @relation("UserMessages")
+  createRooms     Room[]    @relation("UserCreatedRooms")
+  rooms           Room[]    @relation("UserRooms")
 }

@@ -1,7 +1,10 @@
 model Room {
-    id        Int      @id @default(autoincrement())
-    createdAt DateTime @default(now())
-    updateAt  DateTime @updatedAt
-    messages  Message[]
-    users     User[]   @relation("UserRooms", references: [id])
+    id          Int       @id @default(autoincrement())
+    createdAt   DateTime? @default(now())
+    updateAt    DateTime? @updatedAt
+    name        String
+    messages    Message[] @relation("RoomMessages")
+    users       User[]    @relation("UserRooms")
+    createdBy   User      @relation("UserCreatedRooms", fields: [createdById], references: [id])
+    createdById Int       
 }

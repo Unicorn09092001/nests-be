@@ -1,13 +1,13 @@
-import { IsString } from 'class-validator';
+import { IsInt, IsString } from 'class-validator';
 
 export class SendMessageDto {
   @IsString()
   content: string;
 
-  @IsString()
-  roomId: string;
+  @IsInt()
+  roomId: number;
 
-  @IsString()
-  senderId: string;
+  @IsInt()
+  senderId: number;
 }
 

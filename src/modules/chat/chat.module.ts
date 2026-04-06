@@ -5,6 +5,8 @@ import { ChatRepository } from './chat.repository';
 import { AuthModule } from '@/auth/auth.module';
 import { PrismaModule } from '@/infra/prisma/prisma.module';
 import { JwtService } from '@nestjs/jwt';
+import { MessagesController } from './controllers/messages.controller';
+import { RoomsController } from './controllers/room.controller';
 
 @Module({
   imports: [AuthModule, PrismaModule],
@@ -14,6 +16,8 @@ import { JwtService } from '@nestjs/jwt';
     ChatRepository, 
     JwtService,
   ],
+  controllers: [MessagesController, RoomsController],
   exports: [ChatService],
 })
+
 export class ChatModule {}
