@@ -49,7 +49,7 @@ export class ChatGateway {
         client.data.user = null;
         console.log('Anonymous user connected:', client.id);
       }
-    } catch (error) {
+    } catch (error: any) {
       // Token is invalid, but allow connection (authentication will be checked per message)
       client.data.user = null;
       console.log('User connected with invalid token:', client.id, 'Error:', error.message);
@@ -64,8 +64,6 @@ export class ChatGateway {
   @UseGuards(WsJwtGuard)
   @SubscribeMessage('join_room')
   async handleJoin(@ConnectedSocket() client: Socket, @MessageBody() params: FilterMessageDto) {
-    const messages = await this.chatService.getMessages(params);
-
     client.join(`${params.roomId}`);
   }
 

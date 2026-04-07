@@ -22,7 +22,7 @@ export class ChatService {
 
   async getMessages(params: FilterMessageDto) {
     const [data, count] = await this.chatRepo.find({
-      roomId: params.roomId,
+      roomId: Number(params.roomId),
       page: params.page ?? 1,
       pageSize: params.pageSize ?? 10,
     });

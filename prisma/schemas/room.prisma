@@ -6,5 +6,5 @@ model Room {
     messages    Message[] @relation("RoomMessages")
     users       User[]    @relation("UserRooms")
     createdBy   User      @relation("UserCreatedRooms", fields: [createdById], references: [id])
-    createdById Int       
+    createdById Int
 }

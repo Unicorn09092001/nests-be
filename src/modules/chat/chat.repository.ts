@@ -35,6 +35,15 @@ export class ChatRepository {
         skip: (data.page - 1) * data.pageSize,
         take: Number(data.pageSize),
         orderBy: { createdAt: 'asc' },
+        include: {
+          sender: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+            }
+          }
+        }
       }),
       this.prisma.message.count({
         where: filter,
@@ -44,7 +53,11 @@ export class ChatRepository {
 
   async findRooms(data: FilterRoomDto) {
     const filter = {
-      createdById: Number(data.createdById) || undefined,
+      users: {
+        some: {
+          id: 1
+        }
+      }
     }
 
     return Promise.all([
@@ -61,11 +74,12 @@ export class ChatRepository {
   } 
 
   async createRoom(createRoomDto: CreateRoomDto) {
+    const { users, ...roomData } = createRoomDto;
     return this.prisma.room.create({
       data: {
-        ...createRoomDto,
+        ...roomData,
         users: {
-          connect: createRoomDto.users.map(id => ({ id })),
+          connect: [...users.map(id => ({ id })), { id: roomData.createdById }],
         }
       },
     });

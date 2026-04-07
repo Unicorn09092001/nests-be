@@ -3,8 +3,8 @@ model Message {
     content   String   @unique
     createdAt DateTime @default(now())
     updateAt  DateTime @updatedAt
-    roomId    Int      @unique
-    senderId  Int      @unique
-    user      User     @relation("UserMessages", fields: [senderId], references: [id])
+    roomId    Int
+    senderId  Int      
+    sender      User     @relation("UserMessages", fields: [senderId], references: [id])
     room      Room     @relation("RoomMessages", fields: [roomId], references: [id])
 }
