@@ -3,7 +3,7 @@ import { PrismaService } from '@/infra/prisma/prisma.service';
 import { SendMessageDto } from './dto/send-message.dto';
 import { UpdateMessageDto } from './dto/update-message.dto';
 import { FilterMessageDto, FilterRoomDto } from './dto/filter-message.dto';
-import { CreateRoomDto } from './dto/create-room.dto';
+import { CreateRoomDto, UpdateRoomDto } from './dto/create-room.dto';
 
 @Injectable()
 export class ChatRepository {
@@ -55,7 +55,7 @@ export class ChatRepository {
     const filter = {
       users: {
         some: {
-          id: 1
+          id: Number(data.createdById)
         }
       }
     }
@@ -66,6 +66,29 @@ export class ChatRepository {
         skip: (data.page - 1) * data.pageSize,
         take: Number(data.pageSize),
         orderBy: { createdAt: 'desc' },
+        include: {
+          users: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              avatar: true,
+            }
+          },
+          messages: {
+            orderBy: { createdAt: 'desc' },
+            take: 1,
+            include: {
+              sender: {
+                select: {
+                  id: true,
+                  name: true,
+                  email: true,
+                }
+              }
+            }
+          }
+        }
       }),
       this.prisma.room.count({
         where: filter,
@@ -82,6 +105,25 @@ export class ChatRepository {
           connect: [...users.map(id => ({ id })), { id: roomData.createdById }],
         }
       },
+    });
+  }
+
+  async updateRoom(updateRoomDto: UpdateRoomDto) {
+    const { id, name, users } = updateRoomDto;
+    return this.prisma.room.update({
+      where: { id },
+      data: {
+        name,
+        users: {
+          set: users?.map((id) => ({ id })) || [],
+        },
+      },
+    });
+  }
+
+  async deleteRoom(roomId: number) {
+    return this.prisma.room.delete({
+      where: { id: roomId },
     });
   }
 }

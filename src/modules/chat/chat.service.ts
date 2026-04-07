@@ -3,7 +3,7 @@ import { ChatRepository } from './chat.repository';
 import { SendMessageDto } from './dto/send-message.dto';
 import { getPagingMeta } from '@/helpers/util';
 import { FilterMessageDto, FilterRoomDto } from './dto/filter-message.dto';
-import { CreateRoomDto } from './dto/create-room.dto';
+import { CreateRoomDto, UpdateRoomDto } from './dto/create-room.dto';
 
 @Injectable()
 export class ChatService {
@@ -46,13 +46,20 @@ export class ChatService {
     }
   }
 
-  createRoom(createRoomDto: CreateRoomDto) {
-    const room = this.chatRepo.createRoom(createRoomDto);
+  async createRoom(createRoomDto: CreateRoomDto) {
+    const room = await this.chatRepo.createRoom(createRoomDto);
 
     return room;
   }
 
-  async updateRoom() {
-    return 'update room';
+  async updateRoom(updateRoomDto: UpdateRoomDto) {
+    const room = await this.chatRepo.updateRoom(updateRoomDto);
+
+    return room;
+  }
+
+  async deleteRoom(roomId: number) {
+    const room = await this.chatRepo.deleteRoom(roomId);
+    return room;
   }
 }

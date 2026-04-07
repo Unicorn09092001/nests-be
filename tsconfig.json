@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "strict": false,
     "paths": {
       "@/*": ["src/*"]
     },
@@ -24,5 +25,6 @@
     "noImplicitAny": false,
     "strictBindCallApply": false,
     "noFallthroughCasesInSwitch": false,
+    "strictPropertyInitialization": false,
   }
 }

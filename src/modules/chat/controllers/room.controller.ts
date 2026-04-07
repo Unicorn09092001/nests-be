@@ -1,6 +1,6 @@
 import { Body, Controller, Get, Patch, Post, Query, Req } from '@nestjs/common';
 import { ChatService } from '../chat.service';
-import { CreateRoomDto } from '../dto/create-room.dto';
+import { CreateRoomDto, UpdateRoomDto } from '../dto/create-room.dto';
 
 @Controller('rooms')
 export class RoomsController {
@@ -23,7 +23,7 @@ export class RoomsController {
   }
 
   @Patch()
-  update() {
-    return this.chatService.updateRoom();
+  update(@Body() updateRoomDto: UpdateRoomDto) {
+    return this.chatService.updateRoom(updateRoomDto);
   }
 }

@@ -12,8 +12,8 @@ import { UseGuards } from '@nestjs/common';
 import { WsJwtGuard } from './guards/ws-jwt.guard';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
-import { Filter } from 'mongodb';
 import { FilterMessageDto } from './dto/filter-message.dto';
+import { CreateRoomDto, UpdateRoomDto } from './dto/create-room.dto';
 
 @WebSocketGateway({
   cors: {
@@ -91,18 +91,52 @@ export class ChatGateway {
   @SubscribeMessage('create_room')
   async handleCreateRoom(
     @ConnectedSocket() client: Socket,
-    @MessageBody() payload: SendMessageDto,
+    @MessageBody() payload: CreateRoomDto,
   ) {
     const user = client.data.user;
 
     // save DB
-    // const message = await this.chatService.createMessage({
-    //   senderId: user.userId,
-    //   content: payload.content,
-    //   roomId: payload.roomId,
-    // });
+    const room = await this.chatService.createRoom({
+      name: payload.name,
+      users: payload.users,
+      createdById: Number(user.userId),
+    });
 
     // emit room
-    // this.server.to(payload.roomId).emit('receive-message', message);
+    this.server.emit('receive_room', {room, action: "CREATE"});
+  }
+
+  @UseGuards(WsJwtGuard)
+  @SubscribeMessage('update_room')
+  async handleUpdateRoom(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() payload: UpdateRoomDto,
+  ) {
+    const user = client.data.user;
+
+    // save DB
+    const room = await this.chatService.updateRoom({
+      name: payload.name,
+      users: payload.users,
+      id: Number(payload.id)
+    });
+
+    // emit room
+    this.server.emit('receive_room', {room, action: "UPDATE"});
+  }
+
+  @UseGuards(WsJwtGuard)
+  @SubscribeMessage('delete_room')
+  async handleDeleteRoom(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() payload: {roomId: number},
+  ) {
+    const user = client.data.user;
+
+    // save DB
+    const room = await this.chatService.deleteRoom(payload.roomId);
+
+    // emit room
+    this.server.emit('receive_room', {room, action: "DELETE"});
   }
 }

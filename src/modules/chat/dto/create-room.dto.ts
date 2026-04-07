@@ -13,3 +13,14 @@ export class CreateRoomDto {
   createdById: number;
 }
 
+export class UpdateRoomDto {
+  @IsString()
+  @IsNotEmpty()
+  name: string;
+
+  @IsNotEmpty()
+  users: number[];
+
+  @IsNotEmpty()
+  id: number;
+}
