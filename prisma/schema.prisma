@@ -15,12 +15,12 @@ datasource db {
 
 model Message {
     id        Int      @id @default(autoincrement())
-    content   String   @unique
+    content   String
     createdAt DateTime @default(now())
     updateAt  DateTime @updatedAt
     roomId    Int
-    senderId  Int      
-    sender      User     @relation("UserMessages", fields: [senderId], references: [id])
+    senderId  Int
+    sender    User     @relation("UserMessages", fields: [senderId], references: [id])
     room      Room     @relation("RoomMessages", fields: [roomId], references: [id])
 }
 
@@ -38,6 +38,11 @@ model Role {
   permissions Permission[] @relation("RolePermissions")
 }
 
+enum RoomType {
+    GROUP
+    PRIVATE
+}
+
 model Room {
     id          Int       @id @default(autoincrement())
     createdAt   DateTime? @default(now())
@@ -47,6 +52,7 @@ model Room {
     users       User[]    @relation("UserRooms")
     createdBy   User      @relation("UserCreatedRooms", fields: [createdById], references: [id])
     createdById Int
+    type        RoomType  @default(PRIVATE)
 }
 
 

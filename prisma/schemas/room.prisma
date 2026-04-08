@@ -1,3 +1,8 @@
+enum RoomType {
+    GROUP
+    PRIVATE
+}
+
 model Room {
     id          Int       @id @default(autoincrement())
     createdAt   DateTime? @default(now())
@@ -7,4 +12,5 @@ model Room {
     users       User[]    @relation("UserRooms")
     createdBy   User      @relation("UserCreatedRooms", fields: [createdById], references: [id])
     createdById Int
+    type        RoomType  @default(PRIVATE)
 }

@@ -1,4 +1,5 @@
 import { IsInt, IsOptional, IsString } from 'class-validator';
+import { RoomType } from './create-room.dto';
 
 export class FilterMessageDto {
   @IsInt()
@@ -14,6 +15,9 @@ export class FilterMessageDto {
 export class FilterRoomDto {
   @IsInt()
   createdById: number;
+
+  @IsOptional()
+  type?: RoomType
 
   @IsOptional()
   page: number;

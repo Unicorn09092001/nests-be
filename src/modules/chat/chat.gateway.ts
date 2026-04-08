@@ -13,7 +13,7 @@ import { WsJwtGuard } from './guards/ws-jwt.guard';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { FilterMessageDto } from './dto/filter-message.dto';
-import { CreateRoomDto, UpdateRoomDto } from './dto/create-room.dto';
+import { CreateRoomDto, RoomType, UpdateRoomDto } from './dto/create-room.dto';
 
 @WebSocketGateway({
   cors: {
@@ -63,7 +63,31 @@ export class ChatGateway {
   // 👥 join room
   @UseGuards(WsJwtGuard)
   @SubscribeMessage('join_room')
-  async handleJoin(@ConnectedSocket() client: Socket, @MessageBody() params: FilterMessageDto) {
+  async handleJoin(@ConnectedSocket() client: Socket, @MessageBody() params: {
+    roomId: number,
+    users: number[],
+  }) {
+    if (!params.roomId) {
+      if (!params.users) return;
+      const room = await this.chatService.findPrivateRoomBetweenUsers(params.users)
+
+      if (!room) {
+        const createRoom = await this.chatService.createRoom({
+          name: 'private room',
+          users: params.users,
+          createdById: params.users[0],
+          type: RoomType.PRIVATE
+        })
+
+        client.join(`${createRoom.id}`);
+        this.server.emit('receive_room', {room: createRoom, action: "CONVERSATION"});
+      } else {
+        client.join(`${room.id}`);
+        this.server.emit('receive_room', {room, action: "CONVERSATION"});
+      }
+      return;
+    }
+
     client.join(`${params.roomId}`);
   }
 
@@ -100,9 +124,11 @@ export class ChatGateway {
       name: payload.name,
       users: payload.users,
       createdById: Number(user.userId),
+      type: payload.type,
     });
 
     // emit room
+    if (payload.type === RoomType.GROUP)
     this.server.emit('receive_room', {room, action: "CREATE"});
   }
 

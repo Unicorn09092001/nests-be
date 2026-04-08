@@ -21,7 +21,7 @@ export class ChatService {
   }
 
   async getMessages(params: FilterMessageDto) {
-    const [data, count] = await this.chatRepo.find({
+    const [data, count] = await this.chatRepo.findMessage({
       roomId: Number(params.roomId),
       page: params.page ?? 1,
       pageSize: params.pageSize ?? 10,
@@ -38,12 +38,19 @@ export class ChatService {
       createdById: params.createdById,
       page: params.page ?? 1,
       pageSize: params.pageSize ?? 10,
+      type: params.type
     });
 
     return {
       data,
       meta: getPagingMeta(count, params.page ?? 1, params.pageSize ?? 10),
     }
+  }
+
+  async findPrivateRoomBetweenUsers(userIds: number[]) {
+    if (userIds?.length < 2) return;
+
+    return this.chatRepo.findPrivateRoomBetweenUsers(userIds);
   }
 
   async createRoom(createRoomDto: CreateRoomDto) {
@@ -57,6 +64,7 @@ export class ChatService {
 
     return room;
   }
+
 
   async deleteRoom(roomId: number) {
     const room = await this.chatRepo.deleteRoom(roomId);

@@ -1,6 +1,6 @@
 import { Body, Controller, Get, Patch, Post, Query, Req } from '@nestjs/common';
 import { ChatService } from '../chat.service';
-import { CreateRoomDto, UpdateRoomDto } from '../dto/create-room.dto';
+import { CreateRoomDto, RoomType, UpdateRoomDto } from '../dto/create-room.dto';
 
 @Controller('rooms')
 export class RoomsController {
@@ -10,9 +10,10 @@ export class RoomsController {
   findAll(
     @Query('createdById') createdById: number,
     @Query('current') page: number,
-    @Query('pageSize') pageSize: number
+    @Query('pageSize') pageSize: number,
+    @Query('type') type: RoomType,
   ) {
-    return this.chatService.getRooms({createdById, page, pageSize});
+    return this.chatService.getRooms({createdById, page, pageSize, type});
   }
 
   @Post()
@@ -25,5 +26,11 @@ export class RoomsController {
   @Patch()
   update(@Body() updateRoomDto: UpdateRoomDto) {
     return this.chatService.updateRoom(updateRoomDto);
+  }
+
+  @Get('find-private-between-users')
+  findPrivateBetweenUsers(@Query('userIds') userIds: string) {
+    const ids = userIds.split(',').map(id => parseInt(id.trim()));
+    return this.chatService.findPrivateRoomBetweenUsers(ids);
   }
 }

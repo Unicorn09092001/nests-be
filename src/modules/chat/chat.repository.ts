@@ -12,19 +12,37 @@ export class ChatRepository {
   async createMessage(data: SendMessageDto) {
     return this.prisma.message.create({
       data,
+      include: {
+        sender: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          }
+        }
+      }
     });
   }
 
-  async save(message: UpdateMessageDto) {
+  async updateMessage(message: UpdateMessageDto) {
     return this.prisma.message.update({
       where: { id: message.id },
       data: {
         content: message.content,
       },
+      include: {
+        sender: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          }
+        }
+      }
     });
   }
 
-  async find(data: FilterMessageDto) {
+  async findMessage(data: FilterMessageDto) {
     const filter = {
       roomId: data.roomId,
     }
@@ -57,7 +75,8 @@ export class ChatRepository {
         some: {
           id: Number(data.createdById)
         }
-      }
+      },
+      type: data.type ?? undefined
     }
 
     return Promise.all([
@@ -96,11 +115,44 @@ export class ChatRepository {
     ])
   } 
 
+  async findPrivateRoomBetweenUsers(userIds: number[]) {
+    return this.prisma.room.findFirst({
+      where: {
+        type: 'PRIVATE',
+        users: {
+          every: {
+            id: {
+              in: userIds
+            }
+          }
+        },
+        AND: [
+          {
+            users: {
+              some: {
+                id: userIds[0]
+              }
+            }
+          },
+          {
+            users: {
+              some: {
+                id: userIds[1]
+              }
+            }
+          }
+        ]
+      },
+    })
+  }
+
   async createRoom(createRoomDto: CreateRoomDto) {
     const { users, ...roomData } = createRoomDto;
     return this.prisma.room.create({
       data: {
-        ...roomData,
+        name: roomData.name,
+        createdById: roomData.createdById,
+        type: roomData.type,
         users: {
           connect: [...users.map(id => ({ id })), { id: roomData.createdById }],
         }
@@ -109,11 +161,12 @@ export class ChatRepository {
   }
 
   async updateRoom(updateRoomDto: UpdateRoomDto) {
-    const { id, name, users } = updateRoomDto;
+    const { id, name, users, type } = updateRoomDto;
     return this.prisma.room.update({
       where: { id },
       data: {
         name,
+        ...(type && { type }),
         users: {
           set: users?.map((id) => ({ id })) || [],
         },

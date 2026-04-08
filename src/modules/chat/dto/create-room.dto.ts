@@ -1,5 +1,10 @@
 import { IsInt, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
+export enum RoomType {
+  GROUP = 'GROUP',
+  PRIVATE = 'PRIVATE'
+}
+
 export class CreateRoomDto {
   @IsString()
   @IsNotEmpty()
@@ -11,6 +16,10 @@ export class CreateRoomDto {
   @IsInt()
   @IsOptional()
   createdById: number;
+
+  @IsString()
+  @IsNotEmpty()
+  type: RoomType;
 }
 
 export class UpdateRoomDto {
@@ -23,4 +32,8 @@ export class UpdateRoomDto {
 
   @IsNotEmpty()
   id: number;
+
+  @IsString()
+  @IsOptional()
+  type?: RoomType;
 }
