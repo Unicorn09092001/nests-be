@@ -23,6 +23,8 @@
     "prisma:migrate": "ts-node prisma/merge-prisma.ts && prisma migrate dev"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1027.0",
+    "@aws-sdk/s3-request-presigner": "^3.1027.0",
     "@nestjs-modules/mailer": "2.0.2",
     "@nestjs/common": "^11.0.1",
     "@nestjs/config": "3.2.3",
@@ -73,6 +75,7 @@
     "@types/bcrypt": "6.0.0",
     "@types/express": "^5.0.0",
     "@types/jest": "^30.0.0",
+    "@types/multer": "^2.1.0",
     "@types/node": "^22.10.7",
     "@types/pg": "^8.20.0",
     "@types/supertest": "^6.0.2",
