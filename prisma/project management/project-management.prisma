@@ -1,0 +1,89 @@
+model Users {
+    id          String        @id @default(uuid())
+    name        String
+    email       String        @unique
+    phone       String        @unique
+    memberships Memberships[]
+    createdAt   DateTime      @default(now())
+    updatedAt   DateTime      @updatedAt
+
+    @@map("users")
+}
+
+model Workspaces {
+    id          String        @id @default(uuid())
+    name        String
+    memberships Memberships[]
+    projects    Projects[]
+    createdAt   DateTime      @default(now())
+    updatedAt   DateTime      @updatedAt
+
+    @@map("work_spaces")
+}
+
+enum EMembershipRoles {
+    OWNER
+    ADMIN
+    MEMBER
+}
+
+model Memberships {
+    id          String           @id @default(uuid())
+    role        EMembershipRoles
+    userId      String
+    user        Users            @relation(fields: [userId], references: [id])
+    workspaceId String
+    workspace   Workspaces       @relation(fields: [workspaceId], references: [id])
+    tasks       Tasks[]
+    comments    Comments[]
+    createdAt   DateTime         @default(now())
+    updatedAt   DateTime         @updatedAt
+
+    @@unique([userId, workspaceId])
+    @@index([workspaceId])
+    @@map("memberships")
+}
+
+model Projects {
+    id          String     @id @default(uuid())
+    name        String
+    workspaceId String
+    workspace   Workspaces @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+    tasks       Tasks[]
+    createdAt   DateTime   @default(now())
+    updatedAt   DateTime   @updatedAt
+
+    @@index([workspaceId])
+    @@map("projects")
+}
+
+model Tasks {
+    id        String        @id @default(uuid())
+    name      String
+    projectId String
+    project   Projects      @relation(fields: [projectId], references: [id])
+    members   Memberships[]
+    comments  Comments[]
+    createdAt DateTime      @default(now())
+    updatedAt DateTime      @updatedAt
+
+    @@index([projectId])
+    @@map("tasks")
+}
+
+model Comments {
+    id        String      @id @default(uuid())
+    content   String      @db.Text()
+    taskId    String
+    task      Tasks       @relation(fields: [taskId], references: [id])
+    authorId  String
+    author    Memberships @relation(fields: [authorId], references: [id])
+    parentId  String?
+    parent    Comments?   @relation("CommentToComment", fields: [parentId], references: [id])
+    replies   Comments[]  @relation("CommentToComment")
+    createdAt DateTime    @default(now())
+    updatedAt DateTime    @updatedAt
+
+    @@index([taskId, authorId])
+    @@map("comments")
+}

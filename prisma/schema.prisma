@@ -13,11 +13,33 @@ datasource db {
   provider = "mysql"
 }
 
+model Category {
+    id       String    @id @default(uuid())
+    name     String
+    products Product[] @relation("CategoryProduct")
+}
+
+
+model Order {
+    id String @id @default(uuid())
+    products Product[]
+}
+
 model Permission {
   id    Int    @id @default(autoincrement())
   name  String @unique
   roles Role[] @relation("RolePermissions")
 }
+
+model Product {
+    id         String   @id @default(uuid())
+    name       String
+    price      Int
+    categoryId String
+    category   Category @relation("CategoryProduct", fields: [categoryId], references: [id])
+    
+}
+
 
 model Role {
   id          Int          @id @default(autoincrement())

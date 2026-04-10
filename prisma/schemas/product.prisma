@@ -1,0 +1,8 @@
+model Product {
+    id         String   @id @default(uuid())
+    name       String
+    price      Int
+    categoryId String
+    category   Category @relation("CategoryProduct", fields: [categoryId], references: [id])
+    
+}
