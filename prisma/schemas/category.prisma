@@ -1,5 +1,9 @@
 model Category {
-    id       String    @id @default(uuid())
-    name     String
-    products Product[] @relation("CategoryProduct")
+    id        String   @id @default(uuid())
+    name      String
+    books     Book[]
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@map("category")
 }

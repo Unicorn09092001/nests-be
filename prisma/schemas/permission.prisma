@@ -1,5 +1,19 @@
+enum EPermission {
+  USER_VIEW
+  USER_CREATE
+  USER_UPDATE
+  USER_DELETE
+  CREATE_CATEGORY
+  DELETE_CATEGORY
+  UPDATE_CATEGORY
+}
+
 model Permission {
-  id    Int    @id @default(autoincrement())
-  name  String @unique
-  roles Role[] @relation("RolePermissions")
+  id        String      @id @default(uuid())
+  name      String      @unique
+  roles     Role[]
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  @@map("permission")
 }

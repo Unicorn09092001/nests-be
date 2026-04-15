@@ -1,11 +1,8 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
 import { UsersService } from './users.service';
-import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
 import { Permissions, Public } from '@/decorator/customize';
-import { DeleteResult } from 'mongodb';
-import { ActiveUserDto } from './dto/active-user.dto';
 import { PermissionEnum } from '@/common/enum/permission.enum';
+import { ActiveUserDto, CreateUserDto, UpdateUserDto } from './dto/user.dto';
 
 @Controller('users')
 export class UsersController {

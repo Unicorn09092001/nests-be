@@ -1,8 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '@/infra/prisma/prisma.service';
-import { CreateUserDto } from './dto/create-user.dto';
-import { FilterUserDto } from './dto/filter-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
+import { CreateUserDto, FilterUserDto, UpdateUserDto } from './dto/user.dto';
 
 @Injectable()
 export class UserRepository {
@@ -23,7 +21,7 @@ export class UserRepository {
 
   async findById(id: string) {
     return this.prisma.user.findUnique({
-      where: { id: parseInt(id, 10) },
+      where: { id },
       include: {
         roles: {
           include: {
@@ -35,12 +33,14 @@ export class UserRepository {
   }
 
   async findAll(filterData: FilterUserDto) {
+    const filter = {
+      id: filterData.id ?? undefined,
+      email: filterData.email,
+    }
+
     return await Promise.all([
       this.prisma.user.findMany({
-        where: {
-          id: filterData.id ? parseInt(filterData.id as unknown as string, 10) : undefined,
-          email: filterData.email,
-        },
+        where: filter,
         skip: (filterData.page - 1) * filterData.pageSize,
         take: Number(filterData.pageSize),
         orderBy: {
@@ -48,10 +48,7 @@ export class UserRepository {
         },
       }),
       this.prisma.user.count({
-        where: {
-          id: filterData.id ? parseInt(filterData.id as unknown as string, 10) : undefined,
-          email: filterData.email,
-        },
+        where: filter,
       }),
     ]) 
       
@@ -68,7 +65,7 @@ export class UserRepository {
   ) {
     const { id, ...updateData } = data;
     return this.prisma.user.update({
-      where: { id: parseInt(id as unknown as string, 10) },
+      where: { id: id },
       data: {
         ...updateData,
         roles: {
@@ -80,7 +77,7 @@ export class UserRepository {
 
   async remove(id: string) { 
     return this.prisma.user.delete({
-      where: { id: parseInt(id, 10) },
+      where: { id: id },
     });
   }
 }

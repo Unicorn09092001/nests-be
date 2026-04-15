@@ -30,15 +30,15 @@ export class TransformInterceptor<T> implements NestInterceptor<
     next: CallHandler,
   ): Observable<Response<T>> {
     return next.handle().pipe(
-      map(({data, meta}) => {
+      map((res) => {
         const responseData: Response<T> = {
           statusCode: context.switchToHttp().getResponse().statusCode,
           message: this.reflector.get<string>(RESPONSE_MESSAGE, context.getHandler()) || '',
-          data: data,
+          data: res?.data ?? res,
         }
 
-        if (meta) {
-          responseData.meta = meta;
+        if (res?.meta) {
+          responseData.meta = res?.meta;
         }
 
         return responseData

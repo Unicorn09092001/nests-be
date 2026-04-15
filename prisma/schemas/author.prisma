@@ -1,0 +1,10 @@
+model Author {
+    id          String   @id @default(uuid())
+    name        String
+    description String   @db.Text()
+    books       Book[]
+    createdAt   DateTime @default(now())
+    updatedAt   DateTime @updatedAt
+
+    @@map("author")
+}

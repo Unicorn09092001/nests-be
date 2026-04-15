@@ -13,54 +13,127 @@ datasource db {
   provider = "mysql"
 }
 
-model Category {
-    id       String    @id @default(uuid())
-    name     String
-    products Product[] @relation("CategoryProduct")
+model Author {
+    id          String   @id @default(uuid())
+    name        String
+    description String   @db.Text()
+    books       Book[]
+    createdAt   DateTime @default(now())
+    updatedAt   DateTime @updatedAt
+
+    @@map("author")
 }
 
 
-model Order {
-    id String @id @default(uuid())
-    products Product[]
+enum EBookStatus {
+    AVAILABLE
+    BORROWED
+    MAINTENANCE
+}
+
+model Book {
+    id            String         @id @default(uuid())
+    title         String
+    pageNumber    Int
+    isbn          String         @unique
+    status        EBookStatus
+    categoryId    String
+    category      Category       @relation(fields: [categoryId], references: [id])
+    authors       Author[]
+    borrowRecords BorrowRecord[]
+    createdAt     DateTime       @default(now())
+    updatedAt     DateTime       @updatedAt
+
+    @@index([categoryId])
+    @@map("book")
+}
+
+model BorrowRecord {
+    id         String    @id @default(uuid())
+    borrowDate DateTime  @default(now())
+    dueDate    DateTime
+    returnDate DateTime?
+    bookId     String
+    book       Book      @relation(fields: [bookId], references: [id])
+    userId     String
+    user       User      @relation(fields: [userId], references: [id])
+
+    @@index([userId])
+    @@map("borrow_record")
+}
+
+
+model Category {
+    id        String   @id @default(uuid())
+    name      String
+    books     Book[]
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@map("category")
+}
+
+
+enum EPermission {
+  USER_VIEW
+  USER_CREATE
+  USER_UPDATE
+  USER_DELETE
+  CREATE_CATEGORY
+  DELETE_CATEGORY
+  UPDATE_CATEGORY
 }
 
 model Permission {
-  id    Int    @id @default(autoincrement())
-  name  String @unique
-  roles Role[] @relation("RolePermissions")
-}
+  id        String      @id @default(uuid())
+  name      String      @unique
+  roles     Role[]
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
 
-model Product {
-    id         String   @id @default(uuid())
-    name       String
-    price      Int
-    categoryId String
-    category   Category @relation("CategoryProduct", fields: [categoryId], references: [id])
-    
+  @@map("permission")
 }
 
 
 model Role {
-  id          Int          @id @default(autoincrement())
+  id          String       @id @default(uuid())
   name        String       @unique
-  users       User[]       @relation("UserRoles")
-  permissions Permission[] @relation("RolePermissions")
+  users       User[]
+  permissions Permission[]
+
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  @@map("role")
 }
 
 model User {
-  id              Int       @id @default(autoincrement())
-  email           String    @unique
+  id              String         @id @default(uuid())
+  email           String         @unique
   name            String
-  phone           String
   password        String
   refreshToken    String?
-  isEmailVerified Boolean   @default(false)
-  avatar          String?
-  address         String?
-  roles           Role[]    @relation("UserRoles")
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  isEmailVerified Boolean        @default(false)
+  roles           Role[]
+  borrowRecords   BorrowRecord[]
+  profile         Profile?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
   codeId          String?
   codeExpired     DateTime?
+
+  @@map("user")
+}
+
+model Profile {
+  id      String  @id @default(uuid())
+  name    String
+  phone   String  @unique
+  avatar  String?
+  address String?
+  userId  String  @unique
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("profile")
 }

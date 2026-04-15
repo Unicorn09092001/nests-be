@@ -12,6 +12,10 @@ import { TransformInterceptor } from './core/transform.interceptor';
 import { DatabaseModule } from './database/database.module';
 import { PrismaModule } from './infra/prisma/prisma.module';
 import { PermissionsGuard } from './auth/guards/permission.guard';
+import { RolesModule } from './modules/roles/roles.module';
+import { BookModule } from './modules/book/book.module';
+import { CategoryModule } from './modules/category/category.module';
+import { AuthorModule } from './modules/author/author.module';
 
 @Module({
   imports: [
@@ -50,6 +54,10 @@ import { PermissionsGuard } from './auth/guards/permission.guard';
       inject: [ConfigService],
     }),
     PrismaModule,
+    RolesModule,
+    BookModule,
+    CategoryModule,
+    AuthorModule,
   ],
   controllers: [AppController],
   providers: [

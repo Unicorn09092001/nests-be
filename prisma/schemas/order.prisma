@@ -1,4 +1,0 @@
-model Order {
-    id String @id @default(uuid())
-    products Product[]
-}

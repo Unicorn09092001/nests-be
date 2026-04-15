@@ -1,0 +1,36 @@
+enum EBookStatus {
+    AVAILABLE
+    BORROWED
+    MAINTENANCE
+}
+
+model Book {
+    id            String         @id @default(uuid())
+    title         String
+    pageNumber    Int
+    isbn          String         @unique
+    status        EBookStatus
+    categoryId    String
+    category      Category       @relation(fields: [categoryId], references: [id])
+    authors       Author[]
+    borrowRecords BorrowRecord[]
+    createdAt     DateTime       @default(now())
+    updatedAt     DateTime       @updatedAt
+
+    @@index([categoryId])
+    @@map("book")
+}
+
+model BorrowRecord {
+    id         String    @id @default(uuid())
+    borrowDate DateTime  @default(now())
+    dueDate    DateTime
+    returnDate DateTime?
+    bookId     String
+    book       Book      @relation(fields: [bookId], references: [id])
+    userId     String
+    user       User      @relation(fields: [userId], references: [id])
+
+    @@index([userId])
+    @@map("borrow_record")
+}

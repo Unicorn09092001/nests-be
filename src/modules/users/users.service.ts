@@ -1,6 +1,4 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
-import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
 import { getPagingMeta, hashPasswordHelper } from '@/helpers/util';
 import aqp from 'api-query-params';
 import mongoose from 'mongoose';
@@ -8,8 +6,8 @@ import { CreateAuthDto } from '@/auth/dto/create-auth.dto';
 import { v4 as uuidv4 } from 'uuid';
 import dayjs, { Dayjs } from 'dayjs';
 import { MailerService } from '@nestjs-modules/mailer';
-import { ActiveUserDto } from './dto/active-user.dto';
 import { UserRepository } from './users.repository';
+import { ActiveUserDto, CreateUserDto, UpdateUserDto } from './dto/user.dto';
 
 @Injectable()
 export class UsersService {
@@ -41,9 +39,6 @@ export class UsersService {
       id: user.id,
       name: user.name,
       email: user.email,
-      phone: user.phone,
-      address: user.address,
-      avatar: user.avatar,
     };
   }
 
@@ -179,9 +174,9 @@ export class UsersService {
       email: registerDto.email,
       name: registerDto.name ?? "",
       password: hashPassword,
-      phone: '',
-      address: '',
-      avatar: '',
+      // phone: '',
+      // address: '',
+      // avatar: '',
       codeId: codeId,
       codeExpired: dayjs().add(5, 'minutes').toISOString()
     });
