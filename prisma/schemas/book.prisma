@@ -26,10 +26,11 @@ model BorrowRecord {
     borrowDate DateTime  @default(now())
     dueDate    DateTime
     returnDate DateTime?
-    bookId     String
-    book       Book      @relation(fields: [bookId], references: [id])
+    books      Book[]
     userId     String
-    user       User      @relation(fields: [userId], references: [id])
+    user       User      @relation("UserBorrowRecord", fields: [userId], references: [id])
+    createdAt  DateTime  @default(now())
+    updatedAt  DateTime  @updatedAt
 
     @@index([userId])
     @@map("borrow_record")

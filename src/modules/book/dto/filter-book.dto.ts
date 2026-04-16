@@ -1,4 +1,4 @@
-import { IsDate, IsNumber, IsOptional, IsString } from "class-validator";
+import { IsDate, IsNumber, IsOptional, IsString, IsUUID } from "class-validator";
 
 export enum EBookStatus {
     AVAILABLE = "AVAILABLE",
@@ -6,7 +6,17 @@ export enum EBookStatus {
     MAINTENANCE = "MAINTENANCE"
 }
 
-export class FilterBookDto {
+export class PagingDto {
+    @IsOptional()
+    @IsNumber()
+    page: number;
+
+    @IsOptional()
+    @IsNumber()
+    pageSize: number;
+}
+
+export class FilterBookDto extends PagingDto{
     @IsString()
     @IsOptional()
     keyword: string;
@@ -28,12 +38,14 @@ export class FilterBookDto {
     @IsDate()
     @IsOptional()
     updatedAt?: string
+}
+
+export class FilterBorrowHistory extends PagingDto {
+    @IsOptional()
+    @IsUUID()
+    userId: string;
 
     @IsOptional()
-    @IsNumber()
-    page: number;
-
-    @IsOptional()
-    @IsNumber()
-    pageSize: number;
+    @IsUUID()
+    bookId: string;
 }

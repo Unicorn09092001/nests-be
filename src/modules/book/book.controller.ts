@@ -22,11 +22,6 @@ export class BookController {
     return this.bookService.findAll(query, page, pageSize);
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.bookService.findById(id);
-  }
-
   @Patch()
   update(@Body() updateBookDto: UpdateBookDto) {
     return this.bookService.update(updateBookDto);
@@ -49,5 +44,10 @@ export class BookController {
     @Query('pageSize') pageSize: number
   ) {
     return this.bookService.borrowHistory(query, page, pageSize);
+  }
+
+  @Get(':id')
+  findOne(@Param('id') id: string) {
+    return this.bookService.findById(id);
   }
 }

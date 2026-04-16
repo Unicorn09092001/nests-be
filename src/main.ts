@@ -1,8 +1,9 @@
-import { NestFactory } from '@nestjs/core';
+import { NestFactory, Reflector } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ConfigService } from '@nestjs/config';
 import { ValidationPipe } from '@nestjs/common/pipes/validation.pipe';
 import cookieParser from 'cookie-parser';
+import { ClassSerializerInterceptor } from '@nestjs/common';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -11,7 +12,8 @@ async function bootstrap() {
 
   app.useGlobalPipes(new ValidationPipe({
     whitelist: true, 
-    forbidNonWhitelisted: true
+    forbidNonWhitelisted: true,
+    transform: true,
   }));
   app.setGlobalPrefix('api/v1', {exclude: ['']});
 
@@ -22,6 +24,13 @@ async function bootstrap() {
     credentials: true,
   });
   app.use(cookieParser());
+
+  app.useGlobalInterceptors(
+  new ClassSerializerInterceptor(app.get(Reflector), {
+    excludeExtraneousValues: true, // Chỉ trả về những gì có @Expose
+    // strategy: 'excludeAll',        // Cực kỳ nghiêm ngặt: Mặc định là ẩn hết
+  }),
+);
 
   await app.listen(port);
 }

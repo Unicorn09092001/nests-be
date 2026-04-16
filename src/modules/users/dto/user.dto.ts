@@ -1,9 +1,6 @@
-import { IsEmail, IsNotEmpty, IsOptional } from "class-validator";
+import { IsEmail, IsNotEmpty, IsOptional, IsUUID } from "class-validator";
 
 export class CreateUserDto {
-    @IsNotEmpty({message: "Ten nguoi dung khong duoc de trong"})
-    name: string;
-
     @IsNotEmpty()
     @IsEmail()
     email: string;
@@ -21,18 +18,6 @@ export class CreateUserDto {
 export class UpdateUserDto {
     @IsNotEmpty({message: "ID khong duoc de trong"})
     id: string;
-
-    @IsOptional()
-    name: string;
-
-    @IsOptional()
-    phone: string;
-
-    @IsOptional()
-    address: string;
-
-    @IsOptional()
-    avatar: string;
 
     @IsOptional()
     isEmailVerified: boolean;
@@ -73,4 +58,22 @@ export class FilterUserDto {
 
     @IsOptional()
     pageSize: number
+}
+
+export class CreateProfileDto {
+    @IsOptional()
+    name: string;
+
+    @IsOptional() 
+    phone: string;
+
+    @IsOptional()
+    avatar: string;
+
+    @IsOptional()
+    address: string;
+
+    @IsNotEmpty()
+    @IsUUID()
+    userId: string;
 }

@@ -38,11 +38,20 @@ export class RoleRepository {
     //     });
     // }
 
+
+    // this.prisma.permission.deleteMany({
+    //   where: {
+    //     name: {
+    //       in: Object.values(PermissionEnum)
+    //     }
+    //   }
+    // })
+
     return await Promise.all([
         this.prisma.permission.findMany({
-            orderBy: {
-                createdAt: 'desc',
-            },
+          orderBy: {
+            createdAt: 'desc',
+          },
         }),
         this.prisma.permission.count()
     ])

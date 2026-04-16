@@ -30,7 +30,7 @@ export class PermissionsGuard implements CanActivate {
     const user = await this.userService.getUserById(request.user.id);
 
     let userPermissions: string[] = [];
-    user.roles.forEach(role => {
+    user?.roles.forEach(role => {
       userPermissions = [...userPermissions, ...role.permissions?.map(p => p.name) || []];
     });
 

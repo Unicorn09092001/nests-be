@@ -1,8 +1,6 @@
-import { PrismaClient } from '@prisma/client';
+import { EBookStatus, EPermission, PrismaClient } from '@prisma/client';
 import { PrismaMariaDb } from '@prisma/adapter-mariadb';
 import 'dotenv/config';
-import { hashPasswordHelper } from '../src/helpers/util';
-import { PermissionEnum } from '@/common/enum/permission.enum';
 
 const dbUrl = process.env.DATABASE_URL || '';
 const adapter = new PrismaMariaDb(dbUrl);
@@ -13,93 +11,162 @@ const prisma = new PrismaClient({
 });
 
 
+async function findOrCreateCategory(name: string) {
+  const existing = await prisma.category.findFirst({
+    where: { name },
+  });
+  if (existing) return existing;
+
+  return prisma.category.create({
+    data: { name },
+  });
+}
+
+async function findOrCreateAuthor(name: string, description: string) {
+  const existing = await prisma.author.findFirst({
+    where: { name },
+  });
+  if (existing) return existing;
+
+  return prisma.author.create({
+    data: {
+      name,
+      description,
+    },
+  });
+}
+
 async function main() {
   try {
-
-    for (const permission of Object.values(PermissionEnum)) {
-      await prisma.permission.upsert({
-        where: { name: permission },
-        update: {},
-        create: { name: permission },
-      });
-    }
-
-    // const adminRole = await prisma.role.upsert({
-    //   where: { name: 'admin' },
-    //   update: {},
-    //   create: {
-    //     name: 'admin',
-    //     permissions: {
-    //       connect: EPermission.map((p) => ({ name: p })),
-    //     },
-    //   },
-    // });
-
-    // const userRole = await prisma.role.upsert({
-    //   where: { name: 'user' },
-    //   update: {},
-    //   create: {
-    //     name: 'user',
-    //     permissions: {
-    //       connect: ['user.read'].map((p) => ({ name: p })),
-    //     },
-    //   },
-    // });
-
-    // console.log('Roles created:', { admin: adminRole, user: userRole });
-
-    // Generate 20 users
-    // const users = [
-    //   { name: 'John Doe', email: 'john.doe@example.com', phone: '+12345678901', role: 'admin' },
-    //   { name: 'Jane Smith', email: 'jane.smith@example.com', phone: '+12345678902', role: 'admin' },
-    //   { name: 'Bob Johnson', email: 'bob.johnson@example.com', phone: '+12345678903', role: 'user' },
-    //   { name: 'Alice Brown', email: 'alice.brown@example.com', phone: '+12345678904', role: 'user' },
-    //   { name: 'Charlie Wilson', email: 'charlie.wilson@example.com', phone: '+12345678905', role: 'user' },
-    //   { name: 'Diana Davis', email: 'diana.davis@example.com', phone: '+12345678906', role: 'user' },
-    //   { name: 'Edward Miller', email: 'edward.miller@example.com', phone: '+12345678907', role: 'user' },
-    //   { name: 'Fiona Garcia', email: 'fiona.garcia@example.com', phone: '+12345678908', role: 'user' },
-    //   { name: 'George Martinez', email: 'george.martinez@example.com', phone: '+12345678909', role: 'user' },
-    //   { name: 'Helen Rodriguez', email: 'helen.rodriguez@example.com', phone: '+12345678910', role: 'user' },
-    //   { name: 'Ian Lopez', email: 'ian.lopez@example.com', phone: '+12345678911', role: 'user' },
-    //   { name: 'Julia Gonzalez', email: 'julia.gonzalez@example.com', phone: '+12345678912', role: 'user' },
-    //   { name: 'Kevin Perez', email: 'kevin.perez@example.com', phone: '+12345678913', role: 'user' },
-    //   { name: 'Laura Taylor', email: 'laura.taylor@example.com', phone: '+12345678914', role: 'user' },
-    //   { name: 'Michael Anderson', email: 'michael.anderson@example.com', phone: '+12345678915', role: 'user' },
-    //   { name: 'Nancy Thomas', email: 'nancy.thomas@example.com', phone: '+12345678916', role: 'user' },
-    //   { name: 'Oliver Jackson', email: 'oliver.jackson@example.com', phone: '+12345678917', role: 'user' },
-    //   { name: 'Paula White', email: 'paula.white@example.com', phone: '+12345678918', role: 'user' },
-    //   { name: 'Quinn Harris', email: 'quinn.harris@example.com', phone: '+12345678919', role: 'user' },
-    //   { name: 'Rachel Clark', email: 'rachel.clark@example.com', phone: '+12345678920', role: 'user' },
-    // ];
-
-    // const hashedPassword = await hashPasswordHelper('password123');
-    // if (!hashedPassword) {
-    //   throw new Error('Failed to hash password');
-    // }
-
-    // for (const userData of users) {
-    //   const roleName = userData.role;
-    //   const role = roleName === 'admin' ? adminRole : userRole;
-
-    //   await prisma.user.upsert({
-    //     where: { email: userData.email },
+    // for (const permission of Object.values(EPermission)) {
+    //   await prisma.permission.upsert({
+    //     where: { name: permission },
     //     update: {},
-    //     create: {
-    //       name: userData.name,
-    //       email: userData.email,
-    //       phone: userData.phone,
-    //       password: hashedPassword,
-    //       isEmailVerified: true,
-    //       roles: {
-    //         connect: { id: role.id },
-    //       },
-    //     },
+    //     create: { code: permission },
     //   });
     // }
 
-    console.log('Successfully created 20 users');
-    console.log('Admin users: john.doe@example.com, jane.smith@example.com');
-    console.log('All users have password: password123');
+    const categoryNames = [
+      'Fantasy',
+      'Science Fiction',
+      'History',
+      'Philosophy',
+    ];
+
+    const categories = await Promise.all(
+      categoryNames.map(async (name) => findOrCreateCategory(name)),
+    );
+
+    const authorsData = [
+      {
+        name: 'Isaac Asimov',
+        description: 'Author of science fiction, known for the Foundation series and Robot stories.',
+      },
+      {
+        name: 'J.R.R. Tolkien',
+        description: 'Fantasy author best known for The Lord of the Rings and The Hobbit.',
+      },
+      {
+        name: 'Yuval Noah Harari',
+        description: 'Historian and philosopher, author of Sapiens and Homo Deus.',
+      },
+      {
+        name: 'Mary Shelley',
+        description: 'Pioneering science fiction author of Frankenstein.',
+      },
+    ];
+
+    const authors = await Promise.all(
+      authorsData.map(async ({ name, description }) =>
+        findOrCreateAuthor(name, description),
+      ),
+    );
+
+    type BookSeed = {
+      title: string;
+      isbn: string;
+      pageNumber: number;
+      status: EBookStatus;
+      categoryName: string;
+      authorNames: string[];
+    };
+
+    const bookData: BookSeed[] = [
+      {
+        title: 'Foundation',
+        isbn: '9780553293357',
+        pageNumber: 255,
+        status: 'AVAILABLE',
+        categoryName: 'Science Fiction',
+        authorNames: ['Isaac Asimov'],
+      },
+      {
+        title: 'The Hobbit',
+        isbn: '9780547928227',
+        pageNumber: 310,
+        status: 'AVAILABLE',
+        categoryName: 'Fantasy',
+        authorNames: ['J.R.R. Tolkien'],
+      },
+      {
+        title: 'Sapiens: A Brief History of Humankind',
+        isbn: '9780062316110',
+        pageNumber: 498,
+        status: 'AVAILABLE',
+        categoryName: 'History',
+        authorNames: ['Yuval Noah Harari'],
+      },
+      {
+        title: 'Frankenstein',
+        isbn: '9780143131847',
+        pageNumber: 280,
+        status: 'AVAILABLE',
+        categoryName: 'Science Fiction',
+        authorNames: ['Mary Shelley'],
+      },
+      {
+        title: 'The Lord of the Rings',
+        isbn: '9780618640157',
+        pageNumber: 1178,
+        status: 'AVAILABLE',
+        categoryName: 'Fantasy',
+        authorNames: ['J.R.R. Tolkien'],
+      },
+    ];
+
+    for (const book of bookData) {
+      const category = categories.find((item) => item.name === book.categoryName);
+      if (!category) {
+        throw new Error(`Missing category ${book.categoryName}`);
+      }
+
+      const authorConnect = book.authorNames.map((authorName) => {
+        const author = authors.find((item) => item.name === authorName);
+        if (!author) {
+          throw new Error(`Missing author ${authorName}`);
+        }
+        return { id: author.id };
+      });
+
+      await prisma.book.upsert({
+        where: { isbn: book.isbn },
+        update: {},
+        create: {
+          title: book.title,
+          pageNumber: book.pageNumber,
+          isbn: book.isbn,
+          status: book.status,
+          category: {
+            connect: { id: category.id },
+          },
+          authors: {
+            connect: authorConnect,
+          },
+        },
+      });
+    }
+
+    console.log('Seed completed: permissions, categories, authors, books');
   } finally {
     await prisma.$disconnect();
   }

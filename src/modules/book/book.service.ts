@@ -6,11 +6,14 @@ import aqp from 'api-query-params';
 import { getPagingMeta } from '@/helpers/util';
 import { BorrowBookDto } from './dto/borrow-book.dto';
 import { EBookStatus } from './dto/filter-book.dto';
+import { UserRepository } from '../users/users.repository';
+import { UsersService } from '../users/users.service';
 
 @Injectable()
 export class BookService {
   constructor(
-    private readonly bookRepo: BookRepository
+    private readonly bookRepo: BookRepository,
+    private readonly userService: UsersService,
   ){}
 
   async create(createBookDto: CreateBookDto) {
@@ -39,6 +42,9 @@ export class BookService {
 
   async findById(id: string) {
     const book = await this.bookRepo.findById(id)
+    if (!book) {
+      throw new BadRequestException("The book is not found")
+    }
 
     return book;
   }
@@ -56,26 +62,32 @@ export class BookService {
   }
 
   async borrow(borrowBookDto: BorrowBookDto) {
-    const book = await this.bookRepo.findById(borrowBookDto.bookId);
+    // const book = await this.findById(borrowBookDto.bookId);
+    // const user = await this.userService.getUserById(borrowBookDto.userId);
 
-    if (book?.status !== "AVAILABLE") {
-      throw new BadRequestException("The book is not available")
-    }
+    // if (book?.status !== "AVAILABLE") {
+    //   throw new BadRequestException("The book is not available")
+    // }
 
-    const borrowBook = await this.bookRepo.borrow(borrowBookDto);
+    // const borrowBook = await this.bookRepo.borrow(borrowBookDto);
 
-    this.bookRepo.update({
-      id: borrowBookDto.bookId,
-      status: EBookStatus.BORROWED
-    })
+    // this.bookRepo.update({
+    //   id: borrowBookDto.bookId,
+    //   status: EBookStatus.BORROWED
+    // })
     
-    return borrowBook;
+    // return borrowBook;
   }
 
   async borrowHistory(query: string, page: number, pageSize: number) {
     const {filter} = aqp(query);
 
-    const [data, count] = await this.bookRepo.borrowHistory();
+    const [data, count] = await this.bookRepo.borrowHistory({
+      userId: filter.userId,
+      bookId: filter.bookId,
+      page,
+      pageSize
+    });
 
     return {
       data,

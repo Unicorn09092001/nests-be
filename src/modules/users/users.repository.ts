@@ -1,7 +1,35 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '@/infra/prisma/prisma.service';
-import { CreateUserDto, FilterUserDto, UpdateUserDto } from './dto/user.dto';
+import { CreateProfileDto, CreateUserDto, FilterUserDto, UpdateUserDto } from './dto/user.dto';
 
+export const USERS_RESPONSE_SELECT = {
+  id: true,
+  email: true,
+  profile: {
+    select: {
+      name: true,
+      address: true,
+      avatar: true,
+      phone: true,
+    },
+  },
+};
+
+export const USER_RESPONSE_SELECT = {
+  profile: {
+    select: {
+      name: true,
+      address: true,
+      avatar: true,
+      phone: true,
+    },
+  },
+  roles: {
+    include: {
+      permissions: true,
+    },
+  },
+}
 @Injectable()
 export class UserRepository {
   constructor(private readonly prisma: PrismaService) {}
@@ -9,26 +37,14 @@ export class UserRepository {
   async findByEmail(email: string) {
     return this.prisma.user.findUnique({
       where: { email },
-      include: {
-        roles: {
-          include: {
-            permissions: true,
-          },
-        },
-      },
+      // include: USER_RESPONSE_SELECT
     });
   }
 
   async findById(id: string) {
     return this.prisma.user.findUnique({
       where: { id },
-      include: {
-        roles: {
-          include: {
-            permissions: true,
-          },
-        },
-      },
+      include: USER_RESPONSE_SELECT
     });
   }
 
@@ -41,6 +57,7 @@ export class UserRepository {
     return await Promise.all([
       this.prisma.user.findMany({
         where: filter,
+        select: USERS_RESPONSE_SELECT,
         skip: (filterData.page - 1) * filterData.pageSize,
         take: Number(filterData.pageSize),
         orderBy: {
@@ -79,5 +96,26 @@ export class UserRepository {
     return this.prisma.user.delete({
       where: { id: id },
     });
+  }
+
+  async createProfile(data: CreateProfileDto) {
+    return this.prisma.profile.create({
+      data: data
+    })
+  }
+
+  async updateProfile(updateProfileDto: Partial<CreateProfileDto>) {
+    const {userId, ...data} = updateProfileDto;
+
+    return this.prisma.profile.update({
+      where: {userId},
+      data,
+    })
+  }
+
+  async getProfileInfo(userId: string) {
+    return this.prisma.profile.findUnique({
+      where: { userId }
+    })
   }
 }

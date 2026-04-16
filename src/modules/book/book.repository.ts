@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '@/infra/prisma/prisma.service';
 import { CreateBookDto } from './dto/create-book.dto';
-import { FilterBookDto } from './dto/filter-book.dto';
+import { EBookStatus, FilterBookDto, FilterBorrowHistory } from './dto/filter-book.dto';
 import { UpdateBookDto } from './dto/update-book.dto';
 import { BorrowBookDto } from './dto/borrow-book.dto';
 
@@ -53,6 +53,7 @@ export class BookRepository {
         where: filter,
         include: {
             authors: true,
+            category: true,
         },
         skip: (page - 1) * pageSize,
         take: Number(pageSize),
@@ -102,19 +103,52 @@ export class BookRepository {
   }
 
   async borrow(borrowBookDto: BorrowBookDto) {
+    this.prisma.book.updateMany({
+      where: {id: {in: borrowBookDto.bookIds}},
+      data: {
+        status: EBookStatus.BORROWED
+      }
+    })
+
     return this.prisma.borrowRecord.create({
-        data: borrowBookDto
+        data: {
+          ...borrowBookDto,
+          books: {
+            connect: borrowBookDto.bookIds?.map(bookId => ({id: bookId}))
+          }
+        },
     })
   }
 
-  async borrowHistory() {
+  async borrowHistory(filterData: FilterBorrowHistory) {
+    const {page, pageSize, bookId, userId} = filterData
     const filter = {
-
+      ...(bookId && {bookId: bookId}),
+      ...(userId && {userId: userId}) 
     }
 
     return Promise.all([
         this.prisma.borrowRecord.findMany({
-            where: filter
+            where: filter,
+            include: {
+              user: {
+                select: {
+                  profile: true,
+                  id: true,
+                }
+              },
+              books: {
+                select: {
+                  title: true,
+                  id: true,
+                }
+              },
+            },
+            skip: (page - 1) * pageSize,
+            take: Number(pageSize),
+            orderBy: {
+              borrowDate: 'desc',
+            },
         }),
         this.prisma.borrowRecord.count({
             where: filter

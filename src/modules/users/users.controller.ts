@@ -1,8 +1,8 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query, Req, ClassSerializerInterceptor, UseInterceptors } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { Permissions, Public } from '@/decorator/customize';
 import { PermissionEnum } from '@/common/enum/permission.enum';
-import { ActiveUserDto, CreateUserDto, UpdateUserDto } from './dto/user.dto';
+import { ActiveUserDto, CreateProfileDto, CreateUserDto, UpdateUserDto } from './dto/user.dto';
 
 @Controller('users')
 export class UsersController {
@@ -13,7 +13,7 @@ export class UsersController {
   create(@Body() createUserDto: CreateUserDto) {
     return this.usersService.create(createUserDto);
   }
-  
+
   @Get()
   findAll(
     @Query() query: string,
@@ -26,11 +26,6 @@ export class UsersController {
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.usersService.getUserById(id);
-  }
-
-  @Get()
-  findOneByEmail(@Param('email') email:string) {
-    return this.usersService.findOneByEmail(email);
   }
 
   @Patch()
@@ -49,5 +44,13 @@ export class UsersController {
   @Public()
   active(@Body() activeUserDto: ActiveUserDto) {
     return this.usersService.active(activeUserDto);
+  }
+
+  @Patch("profile")
+  updateProfile(
+    @Req() req,
+    @Body() updateProfile: CreateProfileDto
+  ) {
+    return this.usersService.updateProfile(updateProfile, req.user.id);
   }
 }

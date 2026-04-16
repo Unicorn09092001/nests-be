@@ -34,16 +34,4 @@ export class RolesService {
       meta: getPagingMeta(count, 1, 10)
     }
   }
-
-  // findOne(id: number) {
-  //   return `This action returns a #${id} role`;
-  // }
-
-  // update(id: number, updateRoleDto: UpdateRoleDto) {
-  //   return `This action updates a #${id} role`;
-  // }
-
-  // remove(id: number) {
-  //   return `This action removes a #${id} role`;
-  // }
 }

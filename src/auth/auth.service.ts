@@ -29,7 +29,7 @@ export class AuthService {
       }
 
       const authenticated = await comparePassword(pass, user.password);
-      if(!authenticated) return null;
+      if(authenticated) return null;
 
       return user;
     } catch (error) {
@@ -57,7 +57,7 @@ export class AuthService {
   async generateTokens(userId: string, email: string) {
     const user = await this.usersService.getUserById(userId);
 
-    const payload = { username: email, userId: userId, roles: user.roles};
+    const payload = { username: email, userId: userId, roles: user?.roles};
 
     const accessToken = this.jwtService.sign(payload, {
       secret: this.configService.get('JWT_ACCESS_SECRET'),
@@ -81,7 +81,7 @@ export class AuthService {
     })
   }
 
-  async login(user: {email: string, id: string | number, name: string}, response: Response) {
+  async login(user: {email: string, id: string | number}, response: Response) {
     const expiresAccessToken = new Date();
     expiresAccessToken.setMilliseconds(expiresAccessToken.getTime() + parseInt(this.configService.getOrThrow<string>('JWT_ACCESS_TOKEN_EXPIRED')))
 
@@ -112,7 +112,7 @@ export class AuthService {
       user: {
         email: user.email,
         id: user.id,
-        name: user.name
+        // name: user.name
       }
     };
   }

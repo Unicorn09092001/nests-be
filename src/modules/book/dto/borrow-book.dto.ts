@@ -1,23 +1,24 @@
-import { IsDataURI, IsDate, IsDateString, IsInt, IsNotEmpty, IsOptional, IsString, IsUUID } from "class-validator";
+import { IsDateString, IsISO8601, IsNotEmpty, IsOptional, IsUUID } from "class-validator";
 import { Type } from "class-transformer";
 
 export class BorrowBookDto {
     @IsNotEmpty()
     @IsDateString() // Kiểm tra chuỗi format ISO (YYYY-MM-DD...)
-    @Type(() => Date) // Chuyển chuỗi thành đối tượng Date sau khi validate
+    // @Type(() => Date) // Chuyển chuỗi thành đối tượng Date sau khi validate
     borrowDate: Date;
 
     @IsNotEmpty()
     @IsDateString()
-    @Type(() => Date)
+    // @Type(() => Date)
     dueDate: Date;
 
     @IsOptional()
+    @IsDateString()
+    // @Type(() => Date)
     returnDate: Date;
 
     @IsNotEmpty()
-    @IsUUID()
-    bookId: string;
+    bookIds: string[];
 
     @IsNotEmpty()
     @IsUUID()

@@ -1,13 +1,14 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { getPagingMeta, hashPasswordHelper } from '@/helpers/util';
 import aqp from 'api-query-params';
-import mongoose from 'mongoose';
 import { CreateAuthDto } from '@/auth/dto/create-auth.dto';
 import { v4 as uuidv4 } from 'uuid';
-import dayjs, { Dayjs } from 'dayjs';
+import dayjs from 'dayjs';
 import { MailerService } from '@nestjs-modules/mailer';
 import { UserRepository } from './users.repository';
-import { ActiveUserDto, CreateUserDto, UpdateUserDto } from './dto/user.dto';
+import { ActiveUserDto, CreateProfileDto, CreateUserDto, UpdateUserDto } from './dto/user.dto';
+import { plainToInstance } from 'class-transformer';
+import { ProfileEntity, UserEntity } from './entity/user.entity';
 
 @Injectable()
 export class UsersService {
@@ -35,11 +36,7 @@ export class UsersService {
       password: hashPassword,
     })
 
-    return {
-      id: user.id,
-      name: user.name,
-      email: user.email,
-    };
+    return new UserEntity(user)
   }
 
   async findAll(query: string, current: number, pageSize: number) {
@@ -59,7 +56,7 @@ export class UsersService {
     })
 
     return {
-      data,
+      data: data.map(user => new UserEntity(user)),
       meta: getPagingMeta(count, current as number, pageSize as number)
     };
   }
@@ -69,7 +66,7 @@ export class UsersService {
       if (!user) {
         throw new NotFoundException("User not found");
       }
-      return user;
+      return new UserEntity(user)
   }
 
   async findOneByEmail(email: string) {
@@ -88,7 +85,9 @@ export class UsersService {
       throw new NotFoundException("User not found");
     }
 
-    return await this.userRepo.update(updateUserDto);
+    const userUpdated = await this.userRepo.update(updateUserDto);
+
+    return new UserEntity(userUpdated)
   }
 
   async remove(id: string) {
@@ -116,10 +115,12 @@ export class UsersService {
       throw new BadRequestException("Tai khoan da duoc kich hoat")
     }
 
-    return await this.userRepo.update({
+    const userUpdated = await this.userRepo.update({
       id: activeUserDto.userId,
       isEmailVerified: true,
     })
+
+    return new UserEntity(userUpdated)
   }
 
   async handleResendVerifyCode(userId: string) {
@@ -152,7 +153,7 @@ export class UsersService {
       subject: "Activate your account at @hoidanit",
       template: "register",
       context: {
-        name: user.name ?? user.email,
+        name: user.profile?.name ?? user.email,
         activationCode: codeId
       }
     })
@@ -170,13 +171,9 @@ export class UsersService {
     // Hash the password before saving the user
     const hashPassword = await hashPasswordHelper(registerDto.password) ?? "";
     const codeId = uuidv4();
-    const user = await this.userRepo.create({
+    const user = await this.create({
       email: registerDto.email,
-      name: registerDto.name ?? "",
       password: hashPassword,
-      // phone: '',
-      // address: '',
-      // avatar: '',
       codeId: codeId,
       codeExpired: dayjs().add(5, 'minutes').toISOString()
     });
@@ -188,7 +185,7 @@ export class UsersService {
         subject: "Activate your account at @hoidanit",
         template: "register",
         context: {
-          name: user.name ?? user.email,
+          name: user.profile ? user.profile.name : user.email,
           activationCode: codeId
         }
       })
@@ -200,5 +197,19 @@ export class UsersService {
     return {
       id: user.id,
     };
+  }
+
+  async updateProfile(updateProfileDto: CreateProfileDto, userIdFormToken: string) {
+    if (updateProfileDto.userId !== userIdFormToken) {
+      throw new BadRequestException("User don't have permission")
+    }
+
+    const profile = await this.userRepo.getProfileInfo(updateProfileDto.userId);
+    
+    const res = profile 
+      ? this.userRepo.updateProfile(updateProfileDto)
+      : this.userRepo.createProfile(updateProfileDto)
+
+    return res
   }
 }

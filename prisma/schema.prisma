@@ -53,10 +53,11 @@ model BorrowRecord {
     borrowDate DateTime  @default(now())
     dueDate    DateTime
     returnDate DateTime?
-    bookId     String
-    book       Book      @relation(fields: [bookId], references: [id])
+    books      Book[]
     userId     String
-    user       User      @relation(fields: [userId], references: [id])
+    user       User      @relation("UserBorrowRecord", fields: [userId], references: [id])
+    createdAt  DateTime  @default(now())
+    updatedAt  DateTime  @updatedAt
 
     @@index([userId])
     @@map("borrow_record")
@@ -87,6 +88,7 @@ enum EPermission {
 model Permission {
   id        String      @id @default(uuid())
   name      String      @unique
+  code      EPermission @unique
   roles     Role[]
   createdAt DateTime    @default(now())
   updatedAt DateTime    @updatedAt
@@ -110,12 +112,11 @@ model Role {
 model User {
   id              String         @id @default(uuid())
   email           String         @unique
-  name            String
   password        String
   refreshToken    String?
   isEmailVerified Boolean        @default(false)
   roles           Role[]
-  borrowRecords   BorrowRecord[]
+  borrowRecords   BorrowRecord[] @relation("UserBorrowRecord")
   profile         Profile?
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @updatedAt

@@ -24,10 +24,10 @@ export class JwtRefreshStrategy extends PassportStrategy(
     });
   }
 
-  async validate(request: Request, payload: {userId: string, username: string}) {
+  async validate(request: Request, payload: {userId: string, email: string}) {
     return {
       id: payload.userId, 
-      username: payload.username,
+      email: payload.email,
       refreshToken: request.cookies?.refreshToken || request.body?.refreshToken,
     };
   }
