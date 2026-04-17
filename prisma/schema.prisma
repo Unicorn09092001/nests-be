@@ -112,8 +112,8 @@ model Role {
 model User {
   id              String         @id @default(uuid())
   email           String         @unique
-  password        String
-  refreshToken    String?
+  password        String         @db.Text
+  refreshToken    String?        @db.Text
   isEmailVerified Boolean        @default(false)
   roles           Role[]
   borrowRecords   BorrowRecord[] @relation("UserBorrowRecord")

@@ -29,7 +29,7 @@ export class AuthService {
       }
 
       const authenticated = await comparePassword(pass, user.password);
-      if(authenticated) return null;
+      if(!authenticated) return null;
 
       return user;
     } catch (error) {

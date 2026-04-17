@@ -168,12 +168,10 @@ export class UsersService {
       throw new BadRequestException(`Email ${registerDto.email} already exists`);
     }
 
-    // Hash the password before saving the user
-    const hashPassword = await hashPasswordHelper(registerDto.password) ?? "";
     const codeId = uuidv4();
     const user = await this.create({
       email: registerDto.email,
-      password: hashPassword,
+      password: registerDto.password,
       codeId: codeId,
       codeExpired: dayjs().add(5, 'minutes').toISOString()
     });
