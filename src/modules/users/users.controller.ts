@@ -9,7 +9,7 @@ export class UsersController {
   constructor(private readonly usersService: UsersService) {}
   
   @Post()
-  @Permissions(PermissionEnum.USER_CREATE)
+  // @Permissions(PermissionEnum.USER_CREATE)
   create(@Body() createUserDto: CreateUserDto) {
     return this.usersService.create(createUserDto);
   }
@@ -29,13 +29,13 @@ export class UsersController {
   }
 
   @Patch()
-  @Permissions(PermissionEnum.USER_UPDATE)
+  // @Permissions(PermissionEnum.USER_UPDATE)
   update(@Body() updateUserDto: UpdateUserDto) {
     return this.usersService.update(updateUserDto);
   }
 
   @Delete(':id')
-  @Permissions(PermissionEnum.USER_DELETE)
+  // @Permissions(PermissionEnum.USER_DELETE)
   remove(@Param('id') id: string) {
     return this.usersService.remove(id);
   }

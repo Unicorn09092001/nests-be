@@ -1,6 +1,5 @@
 // user-response.dto.ts
 import { Exclude, Expose, Type } from 'class-transformer';
-import { IsOptional } from 'class-validator';
 
 export class ProfileEntity {
   @Expose()
@@ -34,7 +33,7 @@ export class UserEntity {
   email: string;
 
   @Expose()
-  @Type(() => ProfileEntity)
+  @Type(() => RoleEntity)
   roles: RoleEntity[];
 
   // Giả sử bạn muốn trả về profile kèm theo

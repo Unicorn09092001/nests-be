@@ -33,6 +33,7 @@ export class UsersService {
     const hashPassword = await hashPasswordHelper(createUserDto.password) as string;
     const user = await this.userRepo.create({
       ...createUserDto,
+      isEmailVerified: true,
       password: hashPassword,
     })
 
@@ -97,7 +98,7 @@ export class UsersService {
       throw new NotFoundException("User not found");
     }
     
-    return await this.userRepo.remove(id);
+    return new UserEntity(await this.userRepo.remove(id));
   }
 
   async active(activeUserDto: ActiveUserDto) {
@@ -172,6 +173,7 @@ export class UsersService {
     const user = await this.create({
       email: registerDto.email,
       password: registerDto.password,
+      isEmailVerified: false,
       codeId: codeId,
       codeExpired: dayjs().add(5, 'minutes').toISOString()
     });

@@ -4,6 +4,7 @@ import { UpdateCategoryDto } from './dto/update-category.dto';
 import { CategoryRepository } from './category.repository';
 import aqp from 'api-query-params';
 import { getPagingMeta } from '@/helpers/util';
+import { CategoryEntity } from './entity/category.entity';
 
 @Injectable()
 export class CategoryService {
@@ -19,7 +20,7 @@ export class CategoryService {
     }
 
     const category = await this.categoryRepo.create(createCategoryDto);
-    return category;
+    return new CategoryEntity(category);
   }
 
   async findAll(query: string, page: number, pageSize: number) {
@@ -36,7 +37,7 @@ export class CategoryService {
     })
 
     return {
-      data,
+      data: data.map(item => new CategoryEntity(item)),
       meta: getPagingMeta(count, currentPage, currentPageSize)
     };
   }
@@ -48,12 +49,12 @@ export class CategoryService {
   async update(updateCategoryDto: UpdateCategoryDto) {
     const category = await this.categoryRepo.update(updateCategoryDto)
 
-    return category;
+    return new CategoryEntity(category);
   }
 
   async remove(id: string) {
     const category = await this.categoryRepo.delete(id);
 
-    return category;
+    return new CategoryEntity(category);
   }
 }

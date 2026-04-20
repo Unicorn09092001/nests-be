@@ -13,6 +13,9 @@ export class CreateUserDto {
 
     @IsOptional()
     codeExpired: string;
+
+    @IsOptional()
+    isEmailVerified: boolean;
 }
 
 export class UpdateUserDto {
